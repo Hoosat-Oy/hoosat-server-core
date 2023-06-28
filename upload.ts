@@ -8,7 +8,7 @@ import { createWriteStream } from 'fs';
  * @param {number} [maxFileSize] - The maximum allowed file size in bytes. Default is 10MB.
  * @returns {HoosatRequestHandler} The file upload middleware.
  */
-export const fileUploadMiddleware = (uploadLocation: string, maxFileSize: number = 10 * 1024 * 1024): HoosatRequestHandler => {
+export const upload = (uploadLocation: string, maxFileSize: number = 10 * 1024 * 1024): HoosatRequestHandler => {
   return (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler) => {
     // Check if the request is a multipart/form-data upload
     if (req.headers['content-type'] && req.headers['content-type'].startsWith('multipart/form-data')) {
