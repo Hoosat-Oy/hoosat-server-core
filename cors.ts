@@ -1,4 +1,4 @@
-import { HoosatRequest, HoosatRequestHandler, HoosatResponse } from "../../@types";
+import { HoosatRequest, HoosatRequestHandler, HoosatResponse } from "./types";
 import { DEBUG } from "./errors";
 
 /**

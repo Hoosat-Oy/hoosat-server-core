@@ -1,5 +1,5 @@
 import { Transform } from "stream";
-import { HeadTags } from "../../@types";
+import { HeadTags } from "./types";
 import { DEBUG } from "./errors";
 
 /**

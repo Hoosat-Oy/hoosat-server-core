@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from "path";
 import { DEBUG } from "./errors";
-import { HoosatRequest, HoosatRequestHandler, HoosatResponse } from "../../@types";
+import { HoosatRequest, HoosatRequestHandler, HoosatResponse } from "./types";
 
 /**
  * Creates a middleware for serving static assets from a specified public directory.

@@ -3,7 +3,7 @@ import fs from 'fs';
 import http, { IncomingMessage, ServerResponse } from "http";
 import https from "https";
 import { DEBUG } from './errors';
-import { HoosatRequest, HoosatResponse, HoosatRequestHandler, HoosatRoute, HoosatRouter, HoosatServer, HoosatServerOptions } from '../../@types';
+import { HoosatRequest, HoosatResponse, HoosatRequestHandler, HoosatRoute, HoosatRouter, HoosatServer, HoosatServerOptions } from './types';
 
 /**
  * Creates a new router instance.

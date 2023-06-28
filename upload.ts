@@ -1,4 +1,4 @@
-import { HoosatRequest, HoosatResponse, HoosatRequestHandler } from '../../@types';
+import { HoosatRequest, HoosatResponse, HoosatRequestHandler } from './types';
 import { createWriteStream } from 'fs';
 
 /**
