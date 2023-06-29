@@ -25,24 +25,29 @@ export const replaceHeadTags = (headTags: HeadTags): Transform => {
         callback(null, chunk);
         return;
       }
+      
       const chunkStr = chunk.toString();
       const headOpenTagMatch = chunkStr.match(/<head[^>]*>/i);
       const headCloseTagMatch = chunkStr.match(/<\/head>/i);
+      
       if (!headOpenTagMatch) {
         DEBUG.log("Error: Could not find head open tag.");
         callback(new Error("Could not find head open tag."), chunk);
         return;
       }
+      
       if (!headCloseTagMatch) {
         DEBUG.log("Error: Could not find head close tag.");
         callback(new Error("Could not find head close tag."), chunk);
         return;
       }
+      
       const headContent = chunkStr.substring(
         headOpenTagMatch.index + headOpenTagMatch[0].length,
         headCloseTagMatch.index
       );
-      const newHeadContent = `${headContent}${headTags.title ?? ''}${headTags.style ?? ''}${headTags.meta ?? ''}${headTags.script ?? ''}${headTags.base ?? ''}`;
+      
+      const newHeadContent = `${headContent}${headTags.title ?? ''}${headTags.meta ?? ''}${headTags.link ?? ''}${headTags.script ?? ''}${headTags.base ?? ''}${headTags.style ?? ''}`;
       const newChunkStr = `${chunkStr.substring(0, headOpenTagMatch.index + headOpenTagMatch[0].length)}${newHeadContent}${chunkStr.substring(headCloseTagMatch.index)}`;
       chunk = Buffer.from(newChunkStr);
       replaced = true;
