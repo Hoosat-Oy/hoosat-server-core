@@ -21,7 +21,6 @@ export const replaceHeadTags = (headTags: HeadTags): Transform => {
      */
     transform(chunk: any, _encoding: BufferEncoding, callback: (error?: Error | null | undefined, data?: any) => void): void {
       if (replaced) {
-        DEBUG.log("HTML head has already been replaced.");
         callback(null, chunk);
         return;
       }
@@ -61,7 +60,6 @@ export const replaceHeadTags = (headTags: HeadTags): Transform => {
      */
     flush(callback: (error?: Error | null | undefined, data?: any) => void): void {
       if (!replaced) {
-        DEBUG.log("Error: HTML head was not replaced.");
         callback(new Error("HTML head was not replaced."));
         return;
       }

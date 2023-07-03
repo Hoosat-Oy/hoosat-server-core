@@ -12,7 +12,6 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
   // Recursive function to read files from a directory
   function readFilesRecursive(directory: string): void {
     const fileNames = fs.readdirSync(directory);
-    console.log(fileNames);
     fileNames.forEach((fileName) => {
       const filePath = path.join(directory, fileName);
       const stat = fs.statSync(filePath);

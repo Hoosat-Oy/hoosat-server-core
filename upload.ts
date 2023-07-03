@@ -1,68 +1,42 @@
-import { HoosatRequest, HoosatResponse, HoosatRequestHandler } from './types';
-import { createWriteStream } from 'fs';
+import { createReadStream, createWriteStream } from "fs";
+import { v4 as uuidv4 } from "uuid";
+import { HoosatRequest, HoosatRequestHandler, HoosatResponse } from "./types";
 
-/**
- * Middleware for handling file uploads.
- *
- * @param {string} uploadLocation - The location where uploaded files will be saved.
- * @param {number} [maxFileSize] - The maximum allowed file size in bytes. Default is 10MB.
- * @returns {HoosatRequestHandler} The file upload middleware.
- */
-export const upload = (uploadLocation: string, maxFileSize: number = 10 * 1024 * 1024): HoosatRequestHandler => {
-  return (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler) => {
-    // Check if the request is a multipart/form-data upload
+export const upload = (_uploadLocation: string, _maxFileSize: number = 10 * 1024 * 1024): HoosatRequestHandler => {
+  return async (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler) => {
+
     if (req.headers['content-type'] && req.headers['content-type'].startsWith('multipart/form-data')) {
-      const boundary = req.headers['content-type'].split('boundary=')[1];
-      const parts = req.body.split(`--${boundary}`);
-      parts.shift(); // Remove the first empty part
 
-      for (const part of parts) {
-        if (part.trim() === '--') continue; // Skip closing boundary
+      // Iterate over the keys in the request body
+      for (const key in req.files) {
+        const files = req.files[key];
 
-        const lines = part.split('\r\n');
-        const [header, ...contentLines] = lines;
+        // Check if the value is an array (to handle multiple file uploads)
+        if (Array.isArray(files)) {
+          console.log(`Processing uploaded files for key "${key}"`);
 
-        // Extract the field name and content from the part
-        const match = header.match(/name="(.+)"\r\n\r\n/);
-        if (match) {
-          const fieldName = match[1];
-          const content = contentLines.slice(0, -1).join('\r\n'); // Remove last empty line
+          // Iterate over each uploaded file
+          for (const file of files) {
+            // Check if the file is successfully uploaded
+            if (file.size > 0 && file.filepath) {
+              const filePath = `${_uploadLocation}/${uuidv4()}-${file.originalFilename}`;
+              const writeStream = createWriteStream(filePath);
 
-          // Check if the part represents a file upload
-          const fileMatch = header.match(/filename="(.+)"/);
-          if (fileMatch) {
-            const fileName = fileMatch[1];
-            const contentTypeMatch = header.match(/Content-Type: (.+)\r\n/);
-            const contentType = contentTypeMatch ? contentTypeMatch[1] : 'application/octet-stream';
+              // Pipe the file stream (writeStream) to the write stream to save the file
+              const readStream = createReadStream(file.filepath);
+              readStream.pipe(writeStream);
 
-            const fileData = Buffer.from(content, 'binary');
-            if (fileData.length > maxFileSize) {
-              // File size exceeds the maximum allowed limit
-              return res.status(413).json({ error: 'File size exceeds the maximum limit.' });
+              // Log the file path
+              console.log(`File saved: ${filePath}`);
             }
-
-            // Store the file information in the request object
-            if (!req.files) {
-              req.files = {};
-            }
-            req.files[fieldName] = {
-              name: fileName,
-              type: contentType,
-              data: fileData
-            };
-
-            // Save the file to the specified upload location
-            const filePath = `${uploadLocation}/${fileName}`;
-            const writeStream = createWriteStream(filePath);
-            writeStream.write(fileData);
-            writeStream.end();
-          } else {
-            // Regular field value
-            req.body[fieldName] = content;
           }
+        } else {
+          console.log(`No files uploaded for key "${key}"`);
         }
       }
+    } else {
+      console.log("Content-type is not multipart/form-data");
     }
-    return next && next(req, res);
+    next && next(req, res);
   };
 };

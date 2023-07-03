@@ -1,3 +1,4 @@
+import formidable from "formidable";
 import http, { IncomingMessage, ServerResponse, OutgoingHttpHeaders } from "http";
 import https from "https";
 
@@ -7,29 +8,26 @@ interface UploadedFile {
   data: Buffer;
 }
 
-interface HoosatRequest {
-  incomingMessage: IncomingMessage;
-  url: string;
+interface HoosatRequest extends IncomingMessage {
+  parts: any[];
+  url?: string | undefined;
   headers: http.IncomingHttpHeaders;
-  params: {};
+  params?: {};
   body?: any;
-  files?: {
-    [fieldname: string]: UploadedFile;
-  };
+  files?: formidable.Files;
 }
 
-interface HoosatResponse {
-  serverResponse: ServerResponse;
+interface HoosatResponse extends ServerResponse {
   statusCode: number;
   headers: OutgoingHttpHeaders;
   send: (body: string | object) => HoosatResponse;
   json: (body: object) => HoosatResponse;
-  setHeader: (arg0: string, arg1: string) => HoosatResponse;
   status: (status: number) => HoosatResponse;
 }
 
-type HoosatServer = https.Server<typeof IncomingMessage, typeof ServerResponse> | http.Server<typeof IncomingMessage, typeof ServerResponse> | undefined;
 type HoosatRequestHandler = (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler) => void;
+
+type HoosatServer = https.Server<typeof IncomingMessage, typeof ServerResponse> | http.Server<typeof IncomingMessage, typeof ServerResponse> | undefined;
 type HoosatRoute = { path: string; handler: HoosatRequestHandler, method: string };
 
 type HoosatRouter = {

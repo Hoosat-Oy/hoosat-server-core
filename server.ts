@@ -1,5 +1,6 @@
 
 import fs from 'fs';
+import formidable from 'formidable';
 import http, { IncomingMessage, ServerResponse } from "http";
 import https from "https";
 import { DEBUG } from './errors';
@@ -54,7 +55,7 @@ export const createRouter = (): HoosatRouter => {
    * @returns {void}
    */
   const UseRouter = (newRouter: HoosatRouter): void => {
-    for(const route of newRouter.routes) {
+    for (const route of newRouter.routes) {
       routes.push(route);
     }
   }
@@ -74,7 +75,7 @@ export const createRouter = (): HoosatRouter => {
       DEBUG.log("Error: Request handler was not provided for the GET route.");
       return;
     }
-    routes.push({path, handler, method: "GET"})
+    routes.push({ path, handler, method: "GET" })
   };
   /**
    * Defines a new PUT route with the specified path and handler.
@@ -92,7 +93,7 @@ export const createRouter = (): HoosatRouter => {
       DEBUG.log("Error: Request handler was not provided for the PUT route.");
       return;
     }
-    routes.push({path, handler, method: "PUT"})
+    routes.push({ path, handler, method: "PUT" })
   };
   /**
    * Defines a new POST route with the specified path and handler.
@@ -110,7 +111,7 @@ export const createRouter = (): HoosatRouter => {
       DEBUG.log("Error: Request handler was not provided for the POST route.");
       return;
     }
-    routes.push({path, handler, method: "POST"})
+    routes.push({ path, handler, method: "POST" })
   };
   /**
    * Defines a new DELETE route with the specified path and handler.
@@ -128,7 +129,7 @@ export const createRouter = (): HoosatRouter => {
       DEBUG.log("Error: Request handler was not provided for the DELETE route.");
       return;
     }
-    routes.push({path, handler, method: "DELETE"})
+    routes.push({ path, handler, method: "DELETE" })
   };
   /**
    * Defines a middleware with the specified handler.
@@ -151,55 +152,162 @@ export const createRouter = (): HoosatRouter => {
  * @param message - The original IncomingMessage object.
  * @returns A HoosatRequest object.
  */
-const parseIncomingMessage = (message: IncomingMessage): HoosatRequest => {
-  if (!message) {
-    DEBUG.log("Error: IncomingMessage object is required.");
-    throw new Error("Error: IncomingMessage object is required.");
-  }
-  /**
-   * Represents a parsed IncomingMessage object with additional properties.
-   */
-  const request: HoosatRequest = {
-    /**
-     * The original IncomingMessage object.
-     */
-    incomingMessage: message,
-    /**
-     * The URL of the request.
-     */
-    url: message.url || "",
-    /**
-     * The headers of the request.
-     */
-    headers: message.headers,
-    /**
-     * The parsed parameters of the request.
-     */
-    params: {},
-  };
-  let data = '';
-  /**
-   * Event handler for data chunks in the message.
-   * Appends the received chunks to the `data` variable.
-   * @param chunk - The data chunk received.
-   */
-  message.on('data', (chunk) => {
-    data += chunk;
-  });
-  /**
-   * Event handler for the end of the message.
-   * Parses the request body if it is in JSON format.
-   * @returns void
-   */
-  message.on('end', () => {
-    try {
-      // Parse the request body if it is in JSON format
-      request.body = JSON.parse(data);
-    } catch (error) {
-      request.body = data;
-    }
-  });
-  return request;
+const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatRequest> => {
+  
+    const form = formidable({});
+    const [fields, files] = await form.parse(message);
+    const request: HoosatRequest = message as HoosatRequest;
+    request.body = { ...fields};
+    request.files = files;
+    return request;
+    // const chunks: Buffer[] = [];
+    // let contentType = message.headers['content-type'];
+
+    // if (contentType && contentType.startsWith('multipart/form-data')) {
+    //   const boundary = contentType.match(/boundary=(.*)/)?.[1];
+
+    //   console.log("boundary: " + boundary);
+    //   if (!boundary) {
+    //     reject(new Error('Invalid multipart/form-data request. Boundary not found.'));
+    //     return;
+    //   }
+
+    //   let currentPart: Buffer[] = [];
+    //   let currentField: string | null = null;
+    //   let currentFilename: string | null = null;
+    //   let partHeaderComplete = false;
+    //   let isStreamPaused = false;
+
+    //   message.on('data', (chunk: Buffer) => {
+    //     console.log("message.on('data')");
+    //     if (isStreamPaused) return;
+    //     chunks.push(chunk);
+    //   });
+
+    //   message.on('end', () => {
+    //     console.log("message.on('end')");
+    //     const data = Buffer.concat(chunks);
+    //     const request: HoosatRequest = message as HoosatRequest;
+    //     request.parts = [];
+    //     const boundaryBuffer = Buffer.from(`--${boundary}`);
+    //     const endBoundaryBuffer = Buffer.from(`--${boundary}--`);
+
+    //     const processPart = () => {
+    //       console.log("currentField: " + currentField);
+    //       console.log("currentFilename: " + currentFilename);
+    //       if (currentField) {
+    //         const fieldValue = Buffer.concat(currentPart);
+    //         const part = {
+    //           field: currentField,
+    //           filename: currentFilename || '',
+    //           value: fieldValue.toString(),
+    //         };
+    //         request.parts.push(part);
+    //         console.log("Pushed to parts:", part);
+    //       }
+    //       currentPart = [];
+    //       currentField = null;
+    //       currentFilename = null;
+    //       partHeaderComplete = false;
+    //     };
+
+    //     let currentOffset = 0;
+    //     while (currentOffset < data.length - 4) {
+    //       console.log("currentField: " + currentField);
+    //       const boundaryIndex = data.indexOf(boundaryBuffer, currentOffset);
+    //       console.log("boundaryIndex:", boundaryIndex);
+    //       if (boundaryIndex !== -1) {
+    //         console.log("currentPart:", currentPart);
+    //         if (currentPart.length > 0) {
+    //           processPart();
+    //         }
+    //         const endBoundaryIndex = data.indexOf(endBoundaryBuffer, currentOffset);
+    //         console.log("endBoundaryIndex:", endBoundaryIndex);
+    //         if (endBoundaryIndex !== -1) {
+    //           const remainingData = data.slice(currentOffset, endBoundaryIndex);
+    //           if (remainingData.length > 0) {
+    //             currentPart.push(remainingData);
+    //           }
+    //           processPart();
+    //           currentOffset = endBoundaryIndex + endBoundaryBuffer.length;
+    //         } else {
+    //           currentOffset = boundaryIndex + boundaryBuffer.length + 2;
+    //         }
+    //       } else {
+    //         if (!partHeaderComplete && data[currentOffset] === 13 && data[currentOffset + 1] === 10) {
+    //           if (currentPart.length === 0) {
+    //             // Check if it's the start of a new part
+    //             const partHeadersEnd = data.indexOf('\r\n\r\n', currentOffset);
+    //             if (partHeadersEnd === -1) {
+    //               isStreamPaused = true;
+    //               message.pause();
+    //               return;
+    //             }
+
+    //             const partHeaders = data.slice(currentOffset, partHeadersEnd).toString();
+    //             console.log("partHeaders: " + partHeaders);
+    //             const filenameRegex = /filename="([^"]+)"/;
+    //             console.log("filenameRegex: " + filenameRegex);
+    //             const filenameMatch = partHeaders.match(filenameRegex);
+    //             console.log("filenameMatch: " + filenameMatch);
+
+    //             if (filenameMatch && filenameMatch[1]) {
+    //               currentFilename = filenameMatch[1];
+    //             }
+
+    //             // Extract field name from part headers
+    //             const fieldNameRegex = /name="([^"]+)"/;
+    //             const fieldNameMatch = partHeaders.match(fieldNameRegex);
+    //             console.log("fieldNameMatch: " + fieldNameMatch);
+
+    //             if (fieldNameMatch && fieldNameMatch[1]) {
+    //               currentField = fieldNameMatch[1];
+    //             }
+
+    //             partHeaderComplete = true;
+    //             currentOffset = partHeadersEnd + 4;
+    //           } else {
+    //             currentOffset++;
+    //           }
+    //         } else {
+    //           currentPart.push(Buffer.from([data[currentOffset]]));
+    //           currentOffset++;
+    //         }
+    //       }
+    //     }
+
+    //     if (isStreamPaused) {
+    //       message.resume();
+    //     }
+
+    //     resolve(request);
+    //   });
+
+    //   message.on('error', (error: any) => {
+    //     reject(error);
+    //   });
+    // } else {
+    //   message.on('data', (chunk: Buffer) => {
+    //     console.log("message.on('data')");
+    //     chunks.push(chunk);
+    //   });
+    //   message.on('end', () => {
+    //     console.log("message.on('end')");
+    //     const data = Buffer.concat(chunks).toString();
+    //     const request: HoosatRequest = message as HoosatRequest;
+    //     // Parse JSON body
+    //     try {
+    //       request.body = JSON.parse(data);
+    //     } catch (error) {
+    //       request.body = data;
+    //     }
+    //     resolve(request);
+    //   });
+
+    //   message.on('error', (error: any) => {
+    //     reject(error);
+    //   });
+    // }
 };
 
 
@@ -216,63 +324,26 @@ const createServerResponse = (response: ServerResponse): HoosatResponse => {
   /**
    * Represents a modified ServerResponse object with extended functionality.
    */
-  const serverResponse: HoosatResponse = {
-    /**
-     * The original ServerResponse object.
-     */
-    serverResponse: response,
-    /**
-     * The status code to be sent in the response.
-     */
-    statusCode: response.statusCode || 200,
-    /**
-     * The headers to be sent in the response.
-     */
-    headers: response.getHeaders(),
-    /**
-     * Sends a response with the provided body.
-     * @param body - The body of the response (string or object).
-     * @returns The HoosatResponse object.
-     */
-    send: (body: string | object) => {
-      if (typeof body === 'object') {
-        serverResponse.setHeader('Content-Type', 'application/json');
-        response.end(JSON.stringify(body));
-      } else {
-        serverResponse.setHeader('Content-Type', 'text/plain');
-        response.end(body);
-      }
-      return serverResponse;
-    },
-    /**
-     * Sends a JSON response.
-     * @param body - The JSON body of the response.
-     * @returns The HoosatResponse object.
-     */
-    json: (body: object) => {
-      serverResponse.send(body);
-      return serverResponse;
-    },
-    /**
-     * Sets a response header.
-     * @param name - The name of the header.
-     * @param value - The value of the header.
-     * @returns The HoosatResponse object.
-     */
-    setHeader: (name: string, value: string | string[]) => {
-      response.setHeader(name, value);
-      return serverResponse;
-    },
-    /**
-     * Sets the status code of the response.
-     * @param status - The status code.
-     * @returns The HoosatResponse object.
-     */
-    status: (status) => {
-      serverResponse.statusCode = status;
-      return serverResponse;
+  const serverResponse: HoosatResponse = response as HoosatResponse;
+  serverResponse.headers = response.getHeaders();
+  serverResponse.send = (body: string | object) => {
+    if (typeof body === 'object') {
+      serverResponse.setHeader('Content-Type', 'application/json');
+      serverResponse.end(JSON.stringify(body));
+    } else {
+      serverResponse.setHeader('Content-Type', 'text/plain');
+      serverResponse.end(body);
     }
-  };
+    return serverResponse;
+  }
+  serverResponse.json = (body: object) => {
+    serverResponse.send(body);
+    return serverResponse;
+  }
+  serverResponse.status = (status) => {
+    serverResponse.statusCode = status;
+    return serverResponse;
+  }
   return serverResponse;
 };
 
@@ -284,36 +355,19 @@ const createServerResponse = (response: ServerResponse): HoosatResponse => {
  * @param {ServerResponse} res - The server response object.
  * @returns {void}
  */
-export const handleRequest = (router: HoosatRouter, req: IncomingMessage, res: ServerResponse): void => {
-  /**
-   * Parse the incoming request message.
-   */
-  const request = parseIncomingMessage(req);
-  /**
-   * Create the server response object.
-   */
+export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, res: ServerResponse): Promise<void> => {
+  const request = await parseIncomingMessage(req);
   const response = createServerResponse(res);
-  /**
-   * Get the routes from the router.
-   */
   const { routes } = router;
-  /**
-   * Get the path and method from the request.
-   */
-  const path = req.url || '';
-  const method = req.method || '';
-  /**
-   * Find executable middlewares.
-   */
+  const { url: path = '', method = '' } = req;
+
   const middlewares: HoosatRequestHandler[] = [];
   for (const route of routes) {
     if (route.path === 'hoosat-middleware') {
       middlewares.push(route.handler);
     }
   }
-  /**
-   * Execute middlewares and then the specified route.
-   */
+
   let currentMiddleware = 0;
   const executeNext = (currentReq: HoosatRequest, currentRes: HoosatResponse): void => {
     if (currentMiddleware < middlewares.length) {
@@ -321,7 +375,7 @@ export const handleRequest = (router: HoosatRouter, req: IncomingMessage, res: S
       currentMiddleware++;
       middleware(currentReq, currentRes, () => {
         executeNext(currentReq, currentRes);
-      }); // Pass the new callback that maintains the current request and response
+      });
     } else {
       let foundRoute: HoosatRoute | undefined;
       for (const route of routes) {
@@ -350,26 +404,28 @@ export const handleRequest = (router: HoosatRouter, req: IncomingMessage, res: S
         }
       }
       if (foundRoute) {
-        foundRoute.handler(currentReq, currentRes, executeNext); 
+        console.log("executing route:", foundRoute.path);
+        foundRoute.handler(currentReq, currentRes, executeNext);
       } else {
         foundRoute = routes.find(route => {
-          if(route.path === "*") {
+          if (route.path === "*") {
             return true;
           } else if (route.path.endsWith("/*") && path.startsWith(route.path.slice(0, -1))) {
             return true;
-          }  else {
+          } else {
             return false;
           }
         })
-        if(foundRoute) {
-          foundRoute.handler(currentReq, currentRes, executeNext); 
+        if (foundRoute) {
+          console.log("executing route:", foundRoute.path);
+          foundRoute.handler(currentReq, currentRes, executeNext);
         } else {
           response.status(404).send("Not Found");
         }
       }
     }
   };
-  // Start executing middlewares and routes
+
   executeNext(request, response);
 };
 

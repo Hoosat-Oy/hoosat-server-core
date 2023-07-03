@@ -23,13 +23,39 @@ export const assets = (publicPath: string): HoosatRequestHandler => {
     const fileStream = fs.createReadStream(filePath);
 
     fileStream.on('open', () => {
-      res.setHeader('Content-Type', 'text/html'); 
-      fileStream.pipe(res.serverResponse);
+      // Set the appropriate content type based on the file extension
+      const ext = path.extname(filePath).toLowerCase();
+      let contentType = 'application/octet-stream';
+
+      if (ext === '.jpg' || ext === '.jpeg') {
+        contentType = 'image/jpeg';
+      } else if (ext === '.png') {
+        contentType = 'image/png';
+      } else if (ext === '.gif') {
+        contentType = 'image/gif';
+      } else if (ext === '.pdf') {
+        contentType = 'application/pdf';
+      } else if (ext === '.txt') {
+        contentType = 'text/plain';
+      } else if (ext === '.csv') {
+        contentType = 'text/csv';
+      } else if (ext === '.json') {
+        contentType = 'application/json';
+      } else if (ext === '.xml') {
+        contentType = 'application/xml';
+      }
+
+      res.setHeader('Content-Type', contentType);
+      fileStream.pipe(res);
+      fileStream.on('end', () => {
+        // File has been served, so no need to proceed to the wildcard route
+        res.end();
+      });
     });
 
     fileStream.on('error', (err) => {
       if ((err as NodeJS.ErrnoException).code === 'ENOENT' || (err as NodeJS.ErrnoException).code === 'EISDIR') {
-        next && next(req, res);
+        return next && next(req, res);
       } else {
         DEBUG.log(`Error reading file: ${filePath}`);
         DEBUG.log(err);
