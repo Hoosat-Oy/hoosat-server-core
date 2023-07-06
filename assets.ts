@@ -19,7 +19,14 @@ export const assets = (publicPath: string): HoosatRequestHandler => {
    * @returns {void}
    */
   return (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler): void => {
-    const decodedURL = decodeURIComponent(req.url || ''); 
+    let decodedURL: string;
+    try {
+      decodedURL = decodeURIComponent(req.url || '');
+    } catch (error) {
+      // Handle the malformed URI error here
+      console.error('Malformed URI:', error);
+      decodedURL = '';
+    }
     const filePath = path.join(publicPath, decodedURL);
     const fileStream = fs.createReadStream(filePath);
 
