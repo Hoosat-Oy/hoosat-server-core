@@ -166,7 +166,7 @@ const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatReq
     // if (contentType && contentType.startsWith('multipart/form-data')) {
     //   const boundary = contentType.match(/boundary=(.*)/)?.[1];
 
-    //   console.log("boundary: " + boundary);
+    //   DEBUG.log("boundary: " + boundary);
     //   if (!boundary) {
     //     reject(new Error('Invalid multipart/form-data request. Boundary not found.'));
     //     return;
@@ -179,13 +179,13 @@ const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatReq
     //   let isStreamPaused = false;
 
     //   message.on('data', (chunk: Buffer) => {
-    //     console.log("message.on('data')");
+    //     DEBUG.log("message.on('data')");
     //     if (isStreamPaused) return;
     //     chunks.push(chunk);
     //   });
 
     //   message.on('end', () => {
-    //     console.log("message.on('end')");
+    //     DEBUG.log("message.on('end')");
     //     const data = Buffer.concat(chunks);
     //     const request: HoosatRequest = message as HoosatRequest;
     //     request.parts = [];
@@ -193,8 +193,8 @@ const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatReq
     //     const endBoundaryBuffer = Buffer.from(`--${boundary}--`);
 
     //     const processPart = () => {
-    //       console.log("currentField: " + currentField);
-    //       console.log("currentFilename: " + currentFilename);
+    //       DEBUG.log("currentField: " + currentField);
+    //       DEBUG.log("currentFilename: " + currentFilename);
     //       if (currentField) {
     //         const fieldValue = Buffer.concat(currentPart);
     //         const part = {
@@ -203,7 +203,7 @@ const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatReq
     //           value: fieldValue.toString(),
     //         };
     //         request.parts.push(part);
-    //         console.log("Pushed to parts:", part);
+    //         DEBUG.log("Pushed to parts:", part);
     //       }
     //       currentPart = [];
     //       currentField = null;
@@ -213,16 +213,16 @@ const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatReq
 
     //     let currentOffset = 0;
     //     while (currentOffset < data.length - 4) {
-    //       console.log("currentField: " + currentField);
+    //       DEBUG.log("currentField: " + currentField);
     //       const boundaryIndex = data.indexOf(boundaryBuffer, currentOffset);
-    //       console.log("boundaryIndex:", boundaryIndex);
+    //       DEBUG.log("boundaryIndex:", boundaryIndex);
     //       if (boundaryIndex !== -1) {
-    //         console.log("currentPart:", currentPart);
+    //         DEBUG.log("currentPart:", currentPart);
     //         if (currentPart.length > 0) {
     //           processPart();
     //         }
     //         const endBoundaryIndex = data.indexOf(endBoundaryBuffer, currentOffset);
-    //         console.log("endBoundaryIndex:", endBoundaryIndex);
+    //         DEBUG.log("endBoundaryIndex:", endBoundaryIndex);
     //         if (endBoundaryIndex !== -1) {
     //           const remainingData = data.slice(currentOffset, endBoundaryIndex);
     //           if (remainingData.length > 0) {
@@ -245,11 +245,11 @@ const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatReq
     //             }
 
     //             const partHeaders = data.slice(currentOffset, partHeadersEnd).toString();
-    //             console.log("partHeaders: " + partHeaders);
+    //             DEBUG.log("partHeaders: " + partHeaders);
     //             const filenameRegex = /filename="([^"]+)"/;
-    //             console.log("filenameRegex: " + filenameRegex);
+    //             DEBUG.log("filenameRegex: " + filenameRegex);
     //             const filenameMatch = partHeaders.match(filenameRegex);
-    //             console.log("filenameMatch: " + filenameMatch);
+    //             DEBUG.log("filenameMatch: " + filenameMatch);
 
     //             if (filenameMatch && filenameMatch[1]) {
     //               currentFilename = filenameMatch[1];
@@ -258,7 +258,7 @@ const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatReq
     //             // Extract field name from part headers
     //             const fieldNameRegex = /name="([^"]+)"/;
     //             const fieldNameMatch = partHeaders.match(fieldNameRegex);
-    //             console.log("fieldNameMatch: " + fieldNameMatch);
+    //             DEBUG.log("fieldNameMatch: " + fieldNameMatch);
 
     //             if (fieldNameMatch && fieldNameMatch[1]) {
     //               currentField = fieldNameMatch[1];
@@ -288,11 +288,11 @@ const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatReq
     //   });
     // } else {
     //   message.on('data', (chunk: Buffer) => {
-    //     console.log("message.on('data')");
+    //     DEBUG.log("message.on('data')");
     //     chunks.push(chunk);
     //   });
     //   message.on('end', () => {
-    //     console.log("message.on('end')");
+    //     DEBUG.log("message.on('end')");
     //     const data = Buffer.concat(chunks).toString();
     //     const request: HoosatRequest = message as HoosatRequest;
     //     // Parse JSON body
@@ -404,7 +404,7 @@ export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, 
         }
       }
       if (foundRoute) {
-        console.log("executing route:", foundRoute.path);
+        DEBUG.log("executing route:", foundRoute.path);
         foundRoute.handler(currentReq, currentRes, executeNext);
       } else {
         foundRoute = routes.find(route => {
@@ -417,7 +417,7 @@ export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, 
           }
         })
         if (foundRoute) {
-          console.log("executing route:", foundRoute.path);
+          DEBUG.log("executing route:", foundRoute.path);
           foundRoute.handler(currentReq, currentRes, executeNext);
         } else {
           response.status(404).send("Not Found");
@@ -487,12 +487,5 @@ export const createServer = (router: HoosatRouter, options?: HoosatServerOptions
  * @returns {Server} The server instance.
  */
 export const listen = (server: HoosatServer, port: number, callback: () => void): HoosatServer => {
-  /**
-   * The server instance.
-   *
-   * @typedef {Object} Server
-   * @property {Function} listen - Starts the server to listen on a specified port.
-   */
-
   return server?.listen(port, callback);
 };

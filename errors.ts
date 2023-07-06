@@ -1,8 +1,16 @@
+/**
+ * Debug utility for logging messages to the console.
+ */
 export let DEBUG = {
+  /**
+   * Logs the provided arguments to the console.
+   *
+   * @param args - The arguments to be logged.
+   */
   log: (...args: any[]) => {
     console.log(...args);
   }
-}
+};
 
 /**
  * Creates an error handler function that converts an error into a standardized error response.
