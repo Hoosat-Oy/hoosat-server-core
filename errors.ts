@@ -8,7 +8,9 @@ export let DEBUG = {
    * @param args - The arguments to be logged.
    */
   log: (...args: any[]) => {
-    console.log(...args);
+    if(process.env.NODE_ENV === "development") {
+      console.log(...args);
+    }
   }
 };
 
