@@ -380,7 +380,7 @@ export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, 
       let foundRoute: HoosatRoute | undefined;
       for (const route of routes) {
         const { path: routePath, method: routeMethod } = route;
-        const pathSegments = path.split('/').filter(segment => segment !== '');
+        const pathSegments = path.split('/').filter(segment => segment !== '').map(decodeURIComponent);
         const routeSegments = routePath.split('/').filter(segment => segment !== '');
         if (pathSegments.length === routeSegments.length && routeMethod === method) {
           let match = true;

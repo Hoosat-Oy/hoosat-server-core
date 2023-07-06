@@ -19,7 +19,8 @@ export const assets = (publicPath: string): HoosatRequestHandler => {
    * @returns {void}
    */
   return (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler): void => {
-    const filePath = path.join(publicPath, req.url || '');
+    const decodedURL = decodeURIComponent(req.url || ''); 
+    const filePath = path.join(publicPath, decodedURL);
     const fileStream = fs.createReadStream(filePath);
 
     fileStream.on('open', () => {
