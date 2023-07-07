@@ -8,7 +8,22 @@ interface UploadedFile {
   data: Buffer;
 }
 
+export interface AnalyticsDTO {
+  key?: string;
+  element?: string;
+  event?: string;
+  method?: string;
+  url: string;
+  refererr: string;
+  userAgent: string;
+  width: number;
+  height: number;
+  ip: string;
+  createdAt?: Date;
+}
+
 interface HoosatRequest extends IncomingMessage {
+  analytics?: AnalyticsDTO;
   parts: any[];
   url?: string | undefined;
   headers: http.IncomingHttpHeaders;
