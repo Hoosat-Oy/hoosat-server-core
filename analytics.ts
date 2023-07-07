@@ -18,11 +18,16 @@ export const analytics = (storeAnalyticsCallback: (analyticsData: AnalyticsDTO) 
     const { method, url, headers } = req;
     const { referer, "user-agent": userAgent } = headers;
     const { width, height } = req.body;
-
+    const isPageRequest = !url?.includes(".");
+    if (!isPageRequest) {
+      return next && next(req, res);
+    }
+    const isApiRequest = !url?.includes("/api/");
     const analyticsData: AnalyticsDTO = {
       element: "document",
       event: "document requested",
       method: method,
+      type: (isApiRequest) ? "PAGE":  "API",
       url: url!,
       refererr: referer || "",
       userAgent: userAgent!,
@@ -35,6 +40,6 @@ export const analytics = (storeAnalyticsCallback: (analyticsData: AnalyticsDTO) 
     storeAnalyticsCallback(analyticsData);
 
     // Call the next middleware or route handler
-    next && next(req, res);
+    return next && next(req, res);
   };
 };

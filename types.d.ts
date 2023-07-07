@@ -13,6 +13,7 @@ export interface AnalyticsDTO {
   element?: string;
   event?: string;
   method?: string;
+  type?: string;
   url: string;
   refererr: string;
   userAgent: string;
