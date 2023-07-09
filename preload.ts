@@ -172,7 +172,6 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
       case '.indd':
         return 'image';
       case '.json':
-        return 'object';
       case '.txt':
       case '.map':
       case '.pdf':
@@ -182,7 +181,13 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
       case '.xlsx':
       case '.ppt':
       case '.pptx':
-        return 'document';
+      case '.wasm':
+      case '.vtt':
+      case '.html':
+      case '.htm':
+      case '.worker.js':
+      case '.worker.ts':
+        return 'fetch';
       case '.mp3':
       case '.wav':
       case '.ogg':
@@ -200,16 +205,6 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
       case '.woff':
       case '.woff2':
         return 'font';
-      case '.vtt':
-        return 'track';
-      case '.wasm':
-        return 'fetch';
-      case '.html':
-      case '.htm':
-        return 'embed';
-      case '.worker.js':
-      case '.worker.ts':
-        return 'worker';
       default:
         return '';
     }
@@ -227,7 +222,7 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
     if (as === '') {
       return '';
     } else {
-      return `<link rel="preload" href="${href}" as="${as}" crossorigin="anonymous" />`;
+      return `<link rel="preload" href="${href}" as="${as}" />`;
     }
   });
 

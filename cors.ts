@@ -36,6 +36,7 @@ export const cors = (origin: string, methods: string): HoosatRequestHandler => {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', methods);
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     next && next(req, res);
   };
 };
