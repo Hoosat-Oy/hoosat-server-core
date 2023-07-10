@@ -217,15 +217,18 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
   // Generate preload tags
   const preloadTags = files.map(({ filePath }) => {
     const fileName = path.basename(filePath);
-    if(fileName.includes(".map")) {
-      return '\r\n';
+    const toSkip = ['.map', '.txt', '.other', ".jpg", ".jpeg"]; 
+    for (const extension of toSkip) {
+      if (fileName.endsWith(extension)) {
+        return "\r\n";
+      }
     }
     const as = getAs(filePath);
     const href = path.join(publicHrefPath, fileName);
     if (as === '') {
       return '\r\n';
     } else {
-      return `<link rel="preload" href="${href}" as="${as}" />\r\n`;
+      return `<link rel="preload" href="${href}" as="${as}" crossorigin="anonymous"/>\r\n`;
     }
   });
 

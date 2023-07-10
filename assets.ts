@@ -30,6 +30,7 @@ export const assets = (publicPath: string): HoosatRequestHandler => {
     const filePath = path.join(publicPath, decodedURL);
     const fileStream = fs.createReadStream(filePath);
 
+
     fileStream.on('open', () => {
       // Set the appropriate content type based on the file extension
       const ext = path.extname(filePath).toLowerCase();
@@ -51,14 +52,11 @@ export const assets = (publicPath: string): HoosatRequestHandler => {
         contentType = 'application/json';
       } else if (ext === '.xml') {
         contentType = 'application/xml';
+      } else if (ext === '.js') {
+        contentType = 'application/javascript';
       }
 
       res.setHeader('Content-Type', contentType);
-      fileStream.pipe(res);
-      fileStream.on('end', () => {
-        // File has been served, so no need to proceed to the wildcard route
-        res.end();
-      });
     });
 
     fileStream.on('error', (err) => {
@@ -70,5 +68,10 @@ export const assets = (publicPath: string): HoosatRequestHandler => {
         res.status(500).send("Internal Server Error");
       }
     });
+
+    fileStream.on('end', () => {
+      res.end();
+    });
+    fileStream.pipe(res);
   };
 };
