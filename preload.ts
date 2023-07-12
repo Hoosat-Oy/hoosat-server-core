@@ -31,7 +31,8 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
         readFilesRecursive(filePath);
       } else {
         const mimeType = getMimeType(filePath);
-        files.push({ filePath, mimeType });
+        const relativePath = path.relative(folderPath, filePath);
+        files.push({ filePath: relativePath, mimeType });
       }
     });
   }
@@ -224,7 +225,7 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
       }
     }
     const as = getAs(filePath);
-    const href = path.join(publicHrefPath, fileName);
+    const href = path.join(publicHrefPath, filePath);
     if (as === '') {
       return '\r\n';
     } else {
