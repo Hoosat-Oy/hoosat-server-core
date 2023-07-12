@@ -217,7 +217,7 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
   // Generate preload tags
   const preloadTags = files.map(({ filePath }) => {
     const fileName = path.basename(filePath);
-    const toSkip = ['.map', '.txt', '.other', ".jpg", ".jpeg"]; 
+    const toSkip = ['.map', '.txt', '.other', '.json']; 
     for (const extension of toSkip) {
       if (fileName.endsWith(extension)) {
         return "\r\n";
