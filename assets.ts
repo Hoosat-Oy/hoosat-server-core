@@ -79,14 +79,12 @@ export const assets = (publicPath: string, enableCompression = false): HoosatReq
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', cacheControl);
 
+    // Check for compressed files in order and send the compressed file. 
     const compressedExtensions = [".br", ".deflate", ".gzip"];
-
     for (const extension of compressedExtensions) {
       const compressedFilePath = filePath + extension;
-
       if (fs.existsSync(compressedFilePath)) {
         let encoding;
-
         if (extension === ".br") {
           encoding = "br";
         } else if (extension === ".deflate") {
@@ -94,7 +92,6 @@ export const assets = (publicPath: string, enableCompression = false): HoosatReq
         } else if (extension === ".gzip") {
           encoding = "gzip";
         }
-
         const compressedFileStream = fs.createReadStream(compressedFilePath);
         res.setHeader("Content-Encoding", encoding);
         compressedFileStream.pipe(res);
