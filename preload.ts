@@ -174,7 +174,6 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
         return 'image';
       case '.json':
       case '.txt':
-      case '.map':
       case '.pdf':
       case '.doc':
       case '.docx':
@@ -206,6 +205,11 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
       case '.woff':
       case '.woff2':
         return 'font';
+      case '.map':
+      case '.br':
+      case '.deflate':
+      case '.gzip':
+        return 'no-preload';
       default:
         return '';
     }
@@ -217,13 +221,10 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
 
   // Generate preload tags
   const preloadTags = files.map(({ filePath }) => {
-    const as = getAs(filePath);
-    if (as == "image") {
-      return "\r\n";
-    }
     const href = publicHrefPath + filePath;
-    if (as === '') {
-      return '\r\n';
+    const as = getAs(filePath);
+    if (as === "" || as === "no-preload") {
+      return "\r\n";
     } else {
       return `<link rel="preload" href="${href}" as="${as}" crossorigin="anonymous"/>\r\n`;
     }
