@@ -42,61 +42,68 @@ export const assets = (publicPath: string, enableCompression = false): HoosatReq
       return next && next(req, res);
     }
 
-    const fileStream = fs.createReadStream(filePath);
-
-    // Set the appropriate content type based on the file extension
+    // Set the appropriate content type and cache control based on the file extension
     const ext = path.extname(filePath).toLowerCase();
     let contentType = 'application/octet-stream';
+    let cacheControl = 'public, max-age=14400';
 
     if (ext === '.jpg' || ext === '.jpeg') {
       contentType = 'image/jpeg';
+      cacheControl = 'public, max-age=31536000';
     } else if (ext === '.png') {
       contentType = 'image/png';
+      cacheControl = 'public, max-age=31536000';
     } else if (ext === '.gif') {
       contentType = 'image/gif';
+      cacheControl = 'public, max-age=31536000';
     } else if (ext === '.pdf') {
       contentType = 'application/pdf';
+      cacheControl = 'must-revalidate, public, max-age=31536000';
     } else if (ext === '.txt') {
       contentType = 'text/plain';
+      cacheControl = 'must-revalidate, public, max-age=31536000';
     } else if (ext === '.csv') {
       contentType = 'text/csv';
+      cacheControl = 'must-revalidate, public, max-age=31536000';
     } else if (ext === '.json') {
       contentType = 'application/json';
+      cacheControl = 'must-revalidate, public, max-age=31536000';
     } else if (ext === '.xml') {
       contentType = 'application/xml';
+      cacheControl = 'must-revalidate, public, max-age=31536000';
     } else if (ext === '.js') {
       contentType = 'application/javascript';
+      cacheControl = 'must-revalidate, max-age=14400';
     }
 
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=14400')
+    res.setHeader('Cache-Control', cacheControl);
 
-    if (/\bbr\b/.test(acceptEncoding)) {
-      res.setHeader('Content-Encoding','br');
-      try {
-        const compressedFileStream = fs.createReadStream(filePath + ".br");
+    const compressedExtensions = [".br", ".deflate", ".gzip"];
+
+    for (const extension of compressedExtensions) {
+      const compressedFilePath = filePath + extension;
+
+      if (fs.existsSync(compressedFilePath)) {
+        let encoding;
+
+        if (extension === ".br") {
+          encoding = "br";
+        } else if (extension === ".deflate") {
+          encoding = "deflate";
+        } else if (extension === ".gzip") {
+          encoding = "gzip";
+        }
+
+        const compressedFileStream = fs.createReadStream(compressedFilePath);
+        res.setHeader("Content-Encoding", encoding);
         compressedFileStream.pipe(res);
-      } catch (error) {
-        fileStream.pipe(res);
+        return; // Exit the loop and the function
       }
-    } else if (/\bdeflate\b/.test(acceptEncoding)) {
-      res.setHeader('Content-Encoding','deflate');
-      try {
-        const compressedFileStream = fs.createReadStream(filePath + ".deflate");
-        compressedFileStream.pipe(res);
-      } catch (error) {
-        fileStream.pipe(res);
-      }
-    } else if (/\bgzip\b/.test(acceptEncoding)) {
-      res.setHeader('Content-Encoding','gzip');
-      try {
-        const compressedFileStream = fs.createReadStream(filePath + ".gzip");
-        compressedFileStream.pipe(res);
-      } catch (error) {
-        fileStream.pipe(res);
-      }
-    } else  {
-      fileStream.pipe(res);
     }
+
+    // If no compressed file found, send the uncompressed file
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
   };
 };
