@@ -69,7 +69,7 @@ export const assets = (publicPath: string, enableCompression = false): HoosatReq
     }
 
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate, stale-if-error=3600, must-understand, no-store, immutable')
+    res.setHeader('Cache-Control', 'public, max-age=14400')
 
     if (/\bbr\b/.test(acceptEncoding)) {
       res.setHeader('Content-Encoding','br');
