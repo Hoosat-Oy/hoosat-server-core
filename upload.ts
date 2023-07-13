@@ -2,6 +2,7 @@ import { createReadStream, createWriteStream } from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { HoosatRequest, HoosatRequestHandler, HoosatResponse } from "./types";
 import { DEBUG } from "./errors";
+import { compressFiles } from "./compress";
 
 /**
  * Handles file uploads.
@@ -32,6 +33,9 @@ export const upload = (_uploadLocation: string, _maxFileSize: number = 10 * 1024
               file.newFilename = `${uuidv4()}-${file.originalFilename}`;
               // Log the file path
               DEBUG.log(`File saved: ${file.filepath}`);
+              compressFiles("./build/public/files", "br");
+              compressFiles("./build/public/files", "deflate");
+              compressFiles("./build/public/files", "gzip");
             }
           }
         } else {
