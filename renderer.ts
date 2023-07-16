@@ -7,26 +7,31 @@ import { HoosatResponse } from "./types";
 import { DEBUG, ErrorHandler } from "./errors";
 import { ReactNode, JSX } from "react";
 
+
+interface HoosatRenderer {
+  res: HoosatResponse,
+  jsx: ReactNode | JSX.Element,
+  helmetContext: object,
+  extractCSS: boolean,
+  preloadTagFolder: string,
+}
+
 /**
  * Renders a React JSX element or ReactNode to a pipeable stream and sends the response to the client.
  * This function is designed for server-side rendering (SSR) in a Hoosat application.
  *
- * @param {HoosatResponse} res - The response object to send the rendered HTML to the client.
- * @param {ReactNode | JSX.Element} jsx - The JSX element or ReactNode to render to HTML.
- * @param {FilledContext} helmetContext - The helmet context
- * @param {boolean} extractCSS - A boolean flag indicating whether to extract CSS from the client-side assets.
- * @param {string} preloadPrivate - The path to the private preload tags folder.
+ * @param {HoosatRenderer} params - The arguments for Hoosat server side renderer.
  * @returns {void}
  */
-
-export const renderer = (res: HoosatResponse, jsx: ReactNode | JSX.Element, helmetContext: FilledContext, extractCSS: boolean, preloadPrivate: string) => {
+export const renderer = (params: HoosatRenderer): void => {
+  const { res, jsx, helmetContext, extractCSS, preloadTagFolder } = params;
   let css = "";
   if(extractCSS == true) {
     css = extractCssFrom("./src/client");
   }
   let preloadTags: string[];
   if(process.env.NODE_ENV === "development") {
-    preloadTags = generatePreloadTags(preloadPrivate, "/");
+    preloadTags = generatePreloadTags(preloadTagFolder, "/");
   } else {
     preloadTags = generatePreloadTags(process.env.PRELOAD_TAG_FOLDER!, "/");
   }
@@ -36,7 +41,7 @@ export const renderer = (res: HoosatResponse, jsx: ReactNode | JSX.Element, helm
     {
       bootstrapModules: ["/bundle.js"],
       onShellReady: async () => {
-        const { helmet } = helmetContext;
+        const { helmet } = helmetContext as FilledContext;
         while (!helmet?.title) {
           await new Promise(resolve => setTimeout(resolve, 50));
         }
