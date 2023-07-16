@@ -1,6 +1,7 @@
 import { Transform } from "stream";
-import { HeadTags } from "./types";
+import { HeadTags, HelmetContext } from "./types";
 import { DEBUG } from "./errors";
+
 
 /**
  * Creates a Transform stream that replaces the head tags of an HTML document.
@@ -46,6 +47,7 @@ export const replaceHeadTags = (headTags: HeadTags): Transform => {
         headCloseTagMatch.index
       );
       const newHeadContent = `${headContent}${headTags.title ?? ''}${headTags.meta ?? ''}${headTags.link ?? ''}${headTags.script ?? ''}${headTags.base ?? ''}<style>${headTags.style ?? ''}</style>`;
+      
       const newChunkStr = `${chunkStr.substring(0, headOpenTagMatch.index + headOpenTagMatch[0].length)}${newHeadContent}${chunkStr.substring(headCloseTagMatch.index)}`;
       chunk = Buffer.from(newChunkStr);
       replaced = true;
@@ -66,3 +68,20 @@ export const replaceHeadTags = (headTags: HeadTags): Transform => {
     }
   });
 };
+
+
+export const HelmetContextReady = (helmetContext: HelmetContext): Promise<void> => {
+  return new Promise((resolve) => {
+    const checkReady = () => {
+      console.log("HelmetContextReady title: ", helmetContext.helmet?.title?.toString());
+      if (helmetContext.helmet) {
+        resolve();
+      } else {
+        // Check again after a short delay (e.g., 50ms)
+        setTimeout(checkReady, 50);
+      }
+    };
+
+    checkReady();
+  });
+}
