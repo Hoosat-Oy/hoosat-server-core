@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import zlib from 'node:zlib';
 import { pipeline } from 'node:stream';
-import { DEBUG } from './errors';
 
 /**
  * Compresses all non-compressed files in the build folder and its subdirectories using the specified compression algorithm.
@@ -24,7 +23,6 @@ export const compressFiles = (directoryPath: string, compressionAlgorithm: strin
         fileExtension === '.gzip' || fileExtension === '.br' || fileExtension === '.deflate';
 
       if (isCompressed) {
-        DEBUG.log(`Skipping compression for file: ${filePath}`);
         return;
       }
 
@@ -33,7 +31,6 @@ export const compressFiles = (directoryPath: string, compressionAlgorithm: strin
       const compressedFileIsOlder = compressedFileExists && fs.statSync(compressedFilePath).mtime < fileStat.mtime;
 
       if (compressedFileExists && !compressedFileIsOlder) {
-        DEBUG.log(`Skipping compression for file: ${filePath}`);
         return;
       }
 
@@ -57,7 +54,6 @@ export const compressFiles = (directoryPath: string, compressionAlgorithm: strin
             console.error(`Error compressing file: ${filePath}`);
             console.error(err);
           } else {
-            DEBUG.log(`File compressed: ${compressedFilePath}`);
           }
         });
       } else {
