@@ -220,15 +220,14 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
   readFilesRecursive(folderPath);
 
   // Generate preload tags
-  const preloadTags = files.map(({ filePath }) => {
+  const preloadTags = files.map(({ filePath }): string => {
     const href = publicHrefPath + filePath;
     const as = getAs(filePath);
-    if (as === "" || as === "no-preload") {
-      return '';
-    } else {
+    if (as !== "" && as !== "no-preload") {
       return `<link rel="preload" href="${href}" as="${as}" crossorigin="anonymous"/>`;
     }
+    return '';
   });
-
-  return preloadTags;
+  const filteredPreloadTags = preloadTags.filter(tag => tag !== '');
+  return filteredPreloadTags;
 }

@@ -46,8 +46,11 @@ export const replaceHeadTags = (headTags: HeadTags): Transform => {
         headOpenTagMatch.index + headOpenTagMatch[0].length,
         headCloseTagMatch.index
       );
-      const newHeadContent = `${headContent}${headTags.title ?? ''}${headTags.meta ?? ''}${headTags.link ?? ''}${headTags.script ?? ''}${headTags.base ?? ''}${headTags.style ?? ''}`;
-      
+      let newHeadContent = `${headContent!}\r\n${headTags.title!}\r\n${headTags.meta!}\r\n${headTags.link!}\r\n${headTags.script!}\r\n${headTags.base!}\r\n`;
+      newHeadContent += `${headTags.style!}`;
+      newHeadContent = newHeadContent.split("undefined").join("");
+      newHeadContent = newHeadContent.split("/><").join("/>\r\n<");
+
       const newChunkStr = `${chunkStr.substring(0, headOpenTagMatch.index + headOpenTagMatch[0].length)}${newHeadContent}${chunkStr.substring(headCloseTagMatch.index)}`;
       chunk = Buffer.from(newChunkStr);
       replaced = true;
