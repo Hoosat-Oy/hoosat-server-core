@@ -4,7 +4,7 @@ import formidable from 'formidable';
 import http, { IncomingMessage, ServerResponse } from "http";
 import https from "https";
 import { DEBUG } from './errors';
-import { HoosatRequest, HoosatResponse, HoosatRequestHandler, HoosatRoute, HoosatRouter, HoosatServer, HoosatServerOptions } from './types';
+import { HoosatRequest, HoosatResponse, HoosatRequestHandler, HoosatRoute, HoosatRouter, HoosatServer, HoosatServerOptions, HoosatParams } from './types';
 
 /**
  * Creates a new router instance.
@@ -149,172 +149,27 @@ export const createRouter = (): HoosatRouter => {
 
 /**
  * Parses an IncomingMessage object and creates a HoosatRequest object.
- * @param message - The original IncomingMessage object.
- * @returns A HoosatRequest object.
+ * 
+ * @function
+ * @param {IncomingMessage} message - The original IncomingMessage object.
+ * @returns {HoosatResponse}
  */
 const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatRequest> => {
-  
     const form = formidable({});
     const [fields, files] = await form.parse(message);
     const request: HoosatRequest = message as HoosatRequest;
     request.body = { ...fields};
     request.files = files;
     return request;
-    // const chunks: Buffer[] = [];
-    // let contentType = message.headers['content-type'];
-
-    // if (contentType && contentType.startsWith('multipart/form-data')) {
-    //   const boundary = contentType.match(/boundary=(.*)/)?.[1];
-
-    //   DEBUG.log("boundary: " + boundary);
-    //   if (!boundary) {
-    //     reject(new Error('Invalid multipart/form-data request. Boundary not found.'));
-    //     return;
-    //   }
-
-    //   let currentPart: Buffer[] = [];
-    //   let currentField: string | null = null;
-    //   let currentFilename: string | null = null;
-    //   let partHeaderComplete = false;
-    //   let isStreamPaused = false;
-
-    //   message.on('data', (chunk: Buffer) => {
-    //     DEBUG.log("message.on('data')");
-    //     if (isStreamPaused) return;
-    //     chunks.push(chunk);
-    //   });
-
-    //   message.on('end', () => {
-    //     DEBUG.log("message.on('end')");
-    //     const data = Buffer.concat(chunks);
-    //     const request: HoosatRequest = message as HoosatRequest;
-    //     request.parts = [];
-    //     const boundaryBuffer = Buffer.from(`--${boundary}`);
-    //     const endBoundaryBuffer = Buffer.from(`--${boundary}--`);
-
-    //     const processPart = () => {
-    //       DEBUG.log("currentField: " + currentField);
-    //       DEBUG.log("currentFilename: " + currentFilename);
-    //       if (currentField) {
-    //         const fieldValue = Buffer.concat(currentPart);
-    //         const part = {
-    //           field: currentField,
-    //           filename: currentFilename || '',
-    //           value: fieldValue.toString(),
-    //         };
-    //         request.parts.push(part);
-    //         DEBUG.log("Pushed to parts:", part);
-    //       }
-    //       currentPart = [];
-    //       currentField = null;
-    //       currentFilename = null;
-    //       partHeaderComplete = false;
-    //     };
-
-    //     let currentOffset = 0;
-    //     while (currentOffset < data.length - 4) {
-    //       DEBUG.log("currentField: " + currentField);
-    //       const boundaryIndex = data.indexOf(boundaryBuffer, currentOffset);
-    //       DEBUG.log("boundaryIndex:", boundaryIndex);
-    //       if (boundaryIndex !== -1) {
-    //         DEBUG.log("currentPart:", currentPart);
-    //         if (currentPart.length > 0) {
-    //           processPart();
-    //         }
-    //         const endBoundaryIndex = data.indexOf(endBoundaryBuffer, currentOffset);
-    //         DEBUG.log("endBoundaryIndex:", endBoundaryIndex);
-    //         if (endBoundaryIndex !== -1) {
-    //           const remainingData = data.slice(currentOffset, endBoundaryIndex);
-    //           if (remainingData.length > 0) {
-    //             currentPart.push(remainingData);
-    //           }
-    //           processPart();
-    //           currentOffset = endBoundaryIndex + endBoundaryBuffer.length;
-    //         } else {
-    //           currentOffset = boundaryIndex + boundaryBuffer.length + 2;
-    //         }
-    //       } else {
-    //         if (!partHeaderComplete && data[currentOffset] === 13 && data[currentOffset + 1] === 10) {
-    //           if (currentPart.length === 0) {
-    //             // Check if it's the start of a new part
-    //             const partHeadersEnd = data.indexOf('\r\n\r\n', currentOffset);
-    //             if (partHeadersEnd === -1) {
-    //               isStreamPaused = true;
-    //               message.pause();
-    //               return;
-    //             }
-
-    //             const partHeaders = data.slice(currentOffset, partHeadersEnd).toString();
-    //             DEBUG.log("partHeaders: " + partHeaders);
-    //             const filenameRegex = /filename="([^"]+)"/;
-    //             DEBUG.log("filenameRegex: " + filenameRegex);
-    //             const filenameMatch = partHeaders.match(filenameRegex);
-    //             DEBUG.log("filenameMatch: " + filenameMatch);
-
-    //             if (filenameMatch && filenameMatch[1]) {
-    //               currentFilename = filenameMatch[1];
-    //             }
-
-    //             // Extract field name from part headers
-    //             const fieldNameRegex = /name="([^"]+)"/;
-    //             const fieldNameMatch = partHeaders.match(fieldNameRegex);
-    //             DEBUG.log("fieldNameMatch: " + fieldNameMatch);
-
-    //             if (fieldNameMatch && fieldNameMatch[1]) {
-    //               currentField = fieldNameMatch[1];
-    //             }
-
-    //             partHeaderComplete = true;
-    //             currentOffset = partHeadersEnd + 4;
-    //           } else {
-    //             currentOffset++;
-    //           }
-    //         } else {
-    //           currentPart.push(Buffer.from([data[currentOffset]]));
-    //           currentOffset++;
-    //         }
-    //       }
-    //     }
-
-    //     if (isStreamPaused) {
-    //       message.resume();
-    //     }
-
-    //     resolve(request);
-    //   });
-
-    //   message.on('error', (error: any) => {
-    //     reject(error);
-    //   });
-    // } else {
-    //   message.on('data', (chunk: Buffer) => {
-    //     DEBUG.log("message.on('data')");
-    //     chunks.push(chunk);
-    //   });
-    //   message.on('end', () => {
-    //     DEBUG.log("message.on('end')");
-    //     const data = Buffer.concat(chunks).toString();
-    //     const request: HoosatRequest = message as HoosatRequest;
-    //     // Parse JSON body
-    //     try {
-    //       request.body = JSON.parse(data);
-    //     } catch (error) {
-    //       request.body = data;
-    //     }
-    //     resolve(request);
-    //   });
-
-    //   message.on('error', (error: any) => {
-    //     reject(error);
-    //   });
-    // }
 };
 
 
 /**
  * Creates a HoosatResponse object based on a ServerResponse.
- * @param response - The original ServerResponse object.
- * @returns A HoosatResponse object.
+ * 
+ * @function
+ * @param {ServerResponse} response - The original ServerResponse object.
+ * @returns {HoosatResponse}
  */
 const createServerResponse = (response: ServerResponse): HoosatResponse => {
   if (!response) {
@@ -384,7 +239,7 @@ export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, 
         const routeSegments = routePath.split('/').filter(segment => segment !== '');
         if (pathSegments.length === routeSegments.length && routeMethod === method) {
           let match = true;
-          const params: { [paramName: string]: string } = {};
+          const params: HoosatParams = {};
           for (let i = 0; i < routeSegments.length; i++) {
             const routeSegment = routeSegments[i];
             if (routeSegment.startsWith(':')) {
@@ -434,7 +289,7 @@ export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, 
  *
  * @param {Router} router - The router instance to handle incoming requests.
  * @param {ServerOptions} [options] - The options for configuring the server.
- * @returns {Server | undefined} The created server instance, or `undefined` if creation fails.
+ * @returns {HoosatServer | undefined} The created server instance, or `undefined` if creation fails.
  */
 export const createServer = (router: HoosatRouter, options?: HoosatServerOptions): HoosatServer | undefined => {
   /**

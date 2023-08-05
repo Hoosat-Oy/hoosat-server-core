@@ -1,6 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 
+/**
+ * File Info object representing information about a file.
+ *
+ * @interface FileInfo
+ * @property {string} filePath - The path of the file.
+ * @property {string} mimeType - The MIME type of the file.
+ */
 interface FileInfo {
   filePath: string;
   mimeType: string;
@@ -8,18 +15,19 @@ interface FileInfo {
 
 /**
  * Generates preload tags for the files in a given folder.
- * 
- * @param folderPath - The path of the folder containing the files.
- * @param publicHrefPath - The public href path for the files.
- * @returns An array of preload tags.
+ *
+ * @param {string} folderPath - The path of the folder containing the files.
+ * @param {string} publicHrefPath - The public href path for the files.
+ * @returns {string[]} An array of preload tags.
  */
 export function generatePreloadTags(folderPath: string, publicHrefPath: string): string[] {
   const files: FileInfo[] = [];
 
   /**
    * Recursive function to read files from a directory.
-   * 
-   * @param directory - The path of the directory to read files from.
+   *
+   * @param {string} directory - The path of the directory to read files from.
+   * @returns {void}
    */
   function readFilesRecursive(directory: string): void {
     const fileNames = fs.readdirSync(directory);
@@ -36,12 +44,12 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
       }
     });
   }
-
+    
   /**
    * Gets the MIME type of a file based on its extension.
-   * 
-   * @param filePath - The path of the file.
-   * @returns The MIME type of the file.
+   *
+   * @param {string} filePath - The path of the file.
+   * @returns {string} The MIME type of the file.
    */
   function getMimeType(filePath: string): string {
     const ext = path.extname(filePath).toLowerCase();
@@ -145,9 +153,9 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
   
   /**
    * Gets the resource type for a given file based on its extension.
-   * 
-   * @param filePath - The path of the file.
-   * @returns The resource type for the file.
+   *
+   * @param {string} filePath - The path of the file.
+   * @returns {string} The resource type for the file.
    */
   function getAs(filePath: string): string {
     const ext = path.extname(filePath).toLowerCase();

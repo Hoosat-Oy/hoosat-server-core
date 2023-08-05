@@ -2,12 +2,18 @@ import formidable from "formidable";
 import http, { IncomingMessage, ServerResponse, OutgoingHttpHeaders } from "http";
 import https from "https";
 
-interface UploadedFile {
+/**
+ * Represents an uploaded file.
+ */
+export interface UploadedFile {
   name: string;
   type: string;
   data: Buffer;
 }
 
+/**
+ * Represents the data structure for analytics information.
+ */
 export interface AnalyticsDTO {
   key?: string;
   element?: string;
@@ -23,17 +29,31 @@ export interface AnalyticsDTO {
   createdAt?: Date;
 }
 
-interface HoosatRequest extends IncomingMessage {
+/**
+ * Represents the HoosatRequest params
+ */
+export interface HoosatParams {
+  [paramName: string]: string 
+}
+
+
+/**
+ * Represents the extended request object for Hoosat.
+ */
+export interface HoosatRequest extends IncomingMessage {
   analytics?: AnalyticsDTO;
   parts: any[];
   url?: string | undefined;
   headers: http.IncomingHttpHeaders;
-  params?: {};
+  params?: HoosatParams;
   body?: any;
   files?: formidable.Files;
 }
 
-interface HoosatResponse extends ServerResponse {
+/**
+ * Represents the extended response object for Hoosat.
+ */
+export interface HoosatResponse extends ServerResponse {
   statusCode: number;
   headers: OutgoingHttpHeaders;
   send: (body: string | object) => HoosatResponse;
@@ -41,12 +61,25 @@ interface HoosatResponse extends ServerResponse {
   status: (status: number) => HoosatResponse;
 }
 
-type HoosatRequestHandler = (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler) => void;
+/**
+ * Represents a request handler function for Hoosat.
+ */
+export type HoosatRequestHandler = (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler) => void;
 
-type HoosatServer = https.Server<typeof IncomingMessage, typeof ServerResponse> | http.Server<typeof IncomingMessage, typeof ServerResponse> | undefined;
-type HoosatRoute = { path: string; handler: HoosatRequestHandler, method: string };
+/**
+ * Represents the Hoosat server which could be either an https.Server or http.Server.
+ */
+export type HoosatServer = https.Server<typeof IncomingMessage, typeof ServerResponse> | http.Server<typeof IncomingMessage, typeof ServerResponse> | undefined;
 
-type HoosatRouter = {
+/**
+ * Represents a Hoosat route with path, handler, and method.
+ */
+export type HoosatRoute = { path: string; handler: HoosatRequestHandler, method: string };
+
+/**
+ * Represents the Hoosat router with various route handling methods.
+ */
+export type HoosatRouter = {
   routes: HoosatRoute[];
   Route: (method: string, path: string, handler: HoosatRequestHandler) => void;
   UseRouter: (newRouter: HoosatRouter) => void;
@@ -57,7 +90,10 @@ type HoosatRouter = {
   Middleware: (handler: HoosatRequestHandler) => void;
 };
 
-interface HoosatServerOptions {
+/**
+ * Represents the options for the Hoosat server.
+ */
+export interface HoosatServerOptions {
   protocol?: string,
   https?: {
     key?: string,
@@ -66,8 +102,9 @@ interface HoosatServerOptions {
   }
 }
 
-export { HoosatServer, HoosatServerOptions, HoosatRequestHandler, HoosatRequest, HoosatResponse, HoosatRoute, HoosatRouter };
-
+/**
+ * Represents the context for HelmetProvider in React.
+ */
 export interface HelmetContext {
   helmet?: {
     priority?: {
@@ -113,6 +150,9 @@ export interface HelmetContext {
   }
 }
 
+/**
+ * Represents the tags for the head of the HTML document.
+ */
 export interface HeadTags {
   title?: any;
   style?: any;

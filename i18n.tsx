@@ -1,6 +1,25 @@
+/**
+ * The i18n instance for internationalization.
+ * @external i18n
+ * @see {@link https://www.i18next.com/} for more information about i18next.
+ */
+
+/**
+ * The backend for i18next, used to load translation files from the server.
+ * @external Backend
+ * @see {@link https://github.com/i18next/i18next-fs-backend} for more information about i18next-fs-backend.
+ */
+
+/**
+ * The initReactI18next function to initialize i18next for React applications.
+ * @external initReactI18next
+ * @see {@link https://react.i18next.com/} for more information about react-i18next.
+ */
+
 import i18n from "i18next";
-import Backend from "i18next-node-fs-backend";
+import Backend from "i18next-fs-backend";
 import { initReactI18next } from "react-i18next";
+
 
 i18n
   .use(Backend)

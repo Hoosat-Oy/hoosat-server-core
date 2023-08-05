@@ -5,11 +5,12 @@ import { DEBUG } from "./errors";
 import { compressFiles } from "./compress";
 
 /**
- * Handles file uploads.
+ * middleware that handles file uploads and automatically compresses uploaded files.
  *
- * @param _uploadLocation - The directory where uploaded files will be stored.
- * @param _maxFileSize - The maximum allowed file size in bytes. Defaults to 10 MB.
- * @returns A request handler function.
+ * @function
+ * @param {string} _uploadLocation - The directory where uploaded files will be stored.
+ * @param {number} _maxFileSize - The maximum allowed file size in bytes. Defaults to 10 MB.
+ * @returns {HoosatRequestHandler} - A request handler function.
  */
 export const upload = (_uploadLocation: string, _maxFileSize: number = 10 * 1024 * 1024): HoosatRequestHandler => {
   return async (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler) => {
