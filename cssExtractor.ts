@@ -18,6 +18,9 @@ export const extractCssFrom = (directoryPath: string): string => {
   * @returns {void}
   */
   const traverseDirectory = (currentPath: string): void => {
+    if(currentPath === undefined) {
+      return;
+    }
     const directoryContents = fs.readdirSync(currentPath);
     for (const item of directoryContents) {
       const itemPath = path.join(currentPath, item);

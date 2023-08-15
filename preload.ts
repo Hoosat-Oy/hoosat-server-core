@@ -30,6 +30,9 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
    * @returns {void}
    */
   function readFilesRecursive(directory: string): void {
+    if(directory === undefined) {
+      return;
+    }
     const fileNames = fs.readdirSync(directory);
     fileNames.forEach((fileName) => {
       const filePath = path.join(directory, fileName);

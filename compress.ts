@@ -11,6 +11,9 @@ import { pipeline } from 'node:stream';
  * @returns {void}
  */
 export const compressFiles = (directoryPath: string, compressionAlgorithm: string): void => {
+  if(directoryPath === undefined) {
+    return;
+  }
   const files = fs.readdirSync(directoryPath);
 
   files.forEach((file) => {
