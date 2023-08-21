@@ -1,10 +1,15 @@
 import { IncomingMessage } from "http";
 import WebSocket, { WebSocketServer } from 'ws';
 
-export const createSyncSocket = (options?: WebSocket.ServerOptions<typeof WebSocket, typeof IncomingMessage>) => {
+export const createSyncSocket = (options?: WebSocket.ServerOptions<typeof WebSocket, typeof IncomingMessage>, httpsServer?: any) => {
   
   const clientsMap: Map<string, WebSocket[]> = new Map();
-  const wss = new WebSocketServer(options);
+  let wss: WebSocket.Server<typeof WebSocket, typeof IncomingMessage>;
+  if(httpsServer !== undefined) {
+    wss = new WebSocketServer({ ...options, server: httpsServer });
+  } else {
+    wss = new WebSocketServer(options);
+  }
 
   wss.on('connection', (ws: WebSocket) => {
     console.log("WS connection initiated.")

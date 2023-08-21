@@ -320,7 +320,6 @@ export const createServer = (router: HoosatRouter, options?: HoosatServerOptions
     const httpsOptions: https.ServerOptions = {
       key: fs.readFileSync(options?.https?.key || ""),
       cert: fs.readFileSync(options?.https?.cert || ""),
-      ca: fs.readFileSync(options?.https?.ca || ""),
     };
 
     // Create an HTTPS server with the provided options.
