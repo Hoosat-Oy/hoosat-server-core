@@ -66,12 +66,7 @@ export const renderer = ({ res, jsx, helmetContext, extractCSS, preloadTagFolder
   if(extractCSS == true) {
     css = extractCssFrom("./src/client");
   }
-  let preloadTags: string[];
-  if(process.env.NODE_ENV === "development") {
-    preloadTags = generatePreloadTags(preloadTagFolder!, "/");
-  } else {
-    preloadTags = generatePreloadTags(process.env.PRELOAD_TAG_FOLDER!, "/");
-  }
+  let preloadTags = generatePreloadTags(preloadTagFolder!, "/");
   const stream = renderToPipeableStream(
     jsx,
     {
