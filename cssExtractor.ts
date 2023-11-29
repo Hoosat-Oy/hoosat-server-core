@@ -29,7 +29,8 @@ export const extractCssFrom = (directoryPath: string): string => {
         traverseDirectory(itemPath); // Recursively traverse subdirectories
       } else if (itemStat.isFile() && path.extname(item) === '.css') {
         const cssContent = fs.readFileSync(itemPath, 'utf-8');
-        combinedCSS += cssContent; // Append CSS content to the combinedCSS string
+        const cleanedContent = cssContent.replace(/@import[^;]+;/g, '');
+        combinedCSS += cleanedContent; // Append CSS content to the combinedCSS string
       }
     }
   }
