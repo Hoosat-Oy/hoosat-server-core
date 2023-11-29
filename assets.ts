@@ -56,7 +56,10 @@ export const assets = (publicPath: string, enableCompression = false): HoosatReq
     } else if (ext === '.gif') {
       contentType = 'image/gif';
       cacheControl = 'public, max-age=31536000';
-    } else if (ext === '.pdf') {
+    } else if (ext === '.sg') {
+      contentType = 'image/svg+xml';
+      cacheControl = 'public, max-age=31536000';
+    }  else if (ext === '.pdf') {
       contentType = 'application/pdf';
       cacheControl = 'must-revalidate, public, max-age=31536000';
     } else if (ext === '.txt') {
