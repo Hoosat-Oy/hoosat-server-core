@@ -62,7 +62,16 @@ export const assets = (publicPath: string, enableCompression = false): HoosatReq
     } else if (ext === '.svg') {
       contentType = 'image/svg+xml';
       cacheControl = 'public, max-age=31536000';
-    }  else if (ext === '.pdf') {
+    } else if (ext === '.otf') {
+      contentType = 'font/otf';
+      cacheControl = 'public, max-age=31536000';
+    } else if (ext === '.otf') {
+      contentType = 'font/otf';
+      cacheControl = 'public, max-age=31536000';
+    } else if (ext === '.ttf') {
+      contentType = 'font/ttf';
+      cacheControl = 'public, max-age=31536000';
+    } else if (ext === '.pdf') {
       contentType = 'application/pdf';
       cacheControl = 'must-revalidate, public, max-age=31536000';
     } else if (ext === '.txt') {
