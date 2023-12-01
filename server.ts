@@ -213,6 +213,13 @@ const createServerResponse = (response: ServerResponse): HoosatResponse => {
 export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, res: ServerResponse): Promise<void> => {
   const request = await parseIncomingMessage(req);
   const response = createServerResponse(res);
+  res.setHeader(
+    'Content-Security-Policy',
+    "script-src 'self';" +
+      "object-src 'self'; " +
+      "base-uri 'self'; " +
+      "report-uri https://reporting.hoosat.fi"
+  );
   const { routes } = router;
   const { url: path = '', method = '' } = req;
 
