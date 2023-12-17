@@ -1,9 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-
-
-
-
 /**
  * Extracts CSS content from all CSS files within a given directory and its subdirectories.
  *
@@ -37,3 +33,15 @@ export const extractCssFrom = (directoryPath: string): string => {
   traverseDirectory(directoryPath);
   return combinedCSS;
 }
+
+/**
+ * Extracts CSS content from all CSS files within a given directory and its subdirectories.
+ *
+ * @param {string} directoryPath - The path of the directory to traverse for CSS files.
+ * @param {string} outputPath - The path of the file to write the combined CSS content to.
+ * @returns {void}
+ */
+export const extractCssAndWriteToFile = (directoryPath: string, outputPath: string): void => {
+  const combinedCSS = extractCssFrom(directoryPath);
+  fs.writeFileSync(outputPath, combinedCSS, 'utf-8');
+};

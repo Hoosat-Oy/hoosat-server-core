@@ -6,13 +6,13 @@
  */
 import { renderToPipeableStream } from "react-dom/server";
 import { FilledContext } from "react-helmet-async";
-import { extractCssFrom } from "./cssExtractor";
 import { generatePreloadTags } from "./preload";
 import { replaceHeadTags } from "./seo";
 import { HeadTags, HoosatResponse } from "./types";
 import { ErrorHandler } from "./errors";
 import { ReactNode, JSX } from "react";
 import internal from "stream";
+import { extractCssFrom } from "./cssextractor";
 
 /**
  * Represents the arguments for the Hoosat server-side renderer.
@@ -63,7 +63,7 @@ export const helmetStream = async (headTags: HeadTags, helmetContext: object): P
  */
 export const renderer = ({ res, jsx, helmetContext, extractCSS, preloadTagFolder, headTags }: HoosatRendererParams): void => {
   let css = "";
-  if(extractCSS == true) {
+  if(extractCSS === true) {
     css = extractCssFrom("./src/client");
   }
   let preloadTags = generatePreloadTags(preloadTagFolder!, "/");
@@ -78,8 +78,10 @@ export const renderer = ({ res, jsx, helmetContext, extractCSS, preloadTagFolder
           if (headTags !== undefined) {
             newTags = headTags;
           }
-          newTags.link = newTags.link + preloadTags.join("\n");
-          newTags.style = newTags.style + "<style>" + css + "</style>";
+          newTags.link = newTags.link + preloadTags.join("\n") + '<link rel="stylesheet" href="combined-styles.css" />';
+          if (extractCSS === true) {
+            newTags.style = newTags.style + "<style>" + css + "</style>";
+          }
           const replaceStream = await helmetStream(newTags, helmetContext);
           stream.pipe(replaceStream).pipe(res);
         } else {

@@ -89,6 +89,9 @@ export const assets = (publicPath: string, enableCompression = false): HoosatReq
     } else if (ext === '.js') {
       contentType = 'application/javascript';
       cacheControl = 'must-revalidate, max-age=14400';
+    } else if (ext === '.css') {
+      contentType = 'text/css';
+      cacheControl = 'must-revalidate, max-age=14400';
     }
 
     res.setHeader('Content-Type', contentType);
