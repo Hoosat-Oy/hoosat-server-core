@@ -66,7 +66,7 @@ export const renderer = ({ res, jsx, helmetContext, extractCSS, preloadTagFolder
   if(extractCSS === true) {
     css = extractCssFrom("./src/client");
   }
-  let preloadTags = generatePreloadTags(preloadTagFolder!, "/");
+  let preloadTags = generatePreloadTags(preloadTagFolder!, "");
   const stream = renderToPipeableStream(
     jsx,
     {
@@ -78,7 +78,7 @@ export const renderer = ({ res, jsx, helmetContext, extractCSS, preloadTagFolder
           if (headTags !== undefined) {
             newTags = headTags;
           }
-          newTags.link = newTags.link + preloadTags.join("\n") + '<link rel="stylesheet" href="combined-styles.css" />';
+          newTags.link = newTags.link + preloadTags.join("\n") + '<link rel="stylesheet" href="combined-styles.css" crossorigin="use-credentials" />';
           if (extractCSS === true) {
             newTags.style = newTags.style + "<style>" + css + "</style>";
           }

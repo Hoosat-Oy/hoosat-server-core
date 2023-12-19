@@ -216,10 +216,11 @@ export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, 
   res.setHeader(
     'Content-Security-Policy',
     "script-src 'self';" +
-      "object-src 'self'; " +
-      "base-uri 'self'; " +
-      "report-uri https://reporting.hoosat.fi"
-  );
+    "style-src 'self' 'unsafe-inline';" +
+    "object-src 'self';" +
+    "base-uri 'self';" +
+    "report-uri https://reporting.hoosat.fi"
+);
   const { routes } = router;
   const { url: path = '', method = '' } = req;
 

@@ -235,7 +235,7 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
     const href = publicHrefPath + filePath;
     const as = getAs(filePath);
     if (as !== "" && as !== "no-preload") {
-      return `<link rel="preload" href="${href}" as="${as}" crossorigin="anonymous"/>`;
+      return `<link rel="preload" href="${href}" as="${as}" crossorigin="use-credentials" />`;
     }
     return '';
   });
