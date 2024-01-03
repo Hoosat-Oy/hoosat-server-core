@@ -21,6 +21,9 @@ export const assets = (publicPath: string, enableCompression = false): HoosatReq
     let decodedURL: string;
     try {
       decodedURL = decodeURIComponent(req.url || '');
+      if (decodedURL.startsWith('/public')) {
+        decodedURL = decodedURL.slice('/public'.length);
+      }
     } catch (error) {
       // Handle the malformed URI error here
       console.error('Malformed URI:', error);

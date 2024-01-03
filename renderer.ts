@@ -68,8 +68,10 @@ export const renderer = ({ res, jsx, helmetContext, extractCSS, preloadTagFolder
     css = extractCssFrom("./src/client");
   }
   let preloadTags = generatePreloadTags(preloadTagFolder!, "");
-  const bundleFiles = fs.readdirSync("build/public").filter(file => file.startsWith('bundle.') && file.endsWith('.js'));
-  const vendorFiles = fs.readdirSync("build/public").filter(file => file.startsWith('vendor.') && file.endsWith('.js'));
+  const bundleFiles = fs.readdirSync("build/public")
+    .filter(file => file.startsWith('bundle.') && file.endsWith('.js'));
+  const vendorFiles = fs.readdirSync("build/public")
+    .filter(file => file.startsWith('vendor.') && file.endsWith('.js'));
   const stream = renderToPipeableStream(
     jsx,
     {

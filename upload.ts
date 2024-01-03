@@ -8,11 +8,11 @@ import { compressFiles } from "./compress";
  * middleware that handles file uploads and automatically compresses uploaded files.
  *
  * @function
- * @param {string} _uploadLocation - The directory where uploaded files will be stored.
+ * @param {string} uploadLocation - The directory where uploaded files will be stored.
  * @param {number} _maxFileSize - The maximum allowed file size in bytes. Defaults to 10 MB.
  * @returns {HoosatRequestHandler} - A request handler function.
  */
-export const upload = (_uploadLocation: string, _maxFileSize: number = 10 * 1024 * 1024): HoosatRequestHandler => {
+export const upload = (uploadLocation: string, _maxFileSize: number = 10 * 1024 * 1024): HoosatRequestHandler => {
   return async (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler) => {
     if (req.headers['content-type'] && req.headers['content-type'].startsWith('multipart/form-data')) {
       // Iterate over the keys in the request body
@@ -25,7 +25,7 @@ export const upload = (_uploadLocation: string, _maxFileSize: number = 10 * 1024
           for (const file of files) {
             // Check if the file is successfully uploaded
             if (file.size > 0 && file.filepath) {
-              const filePath = `${_uploadLocation}/${uuidv4()}-${file.originalFilename}`;
+              const filePath = `${uploadLocation}/${uuidv4()}-${file.originalFilename}`;
               const writeStream = createWriteStream(filePath);
               // Pipe the file stream (writeStream) to the write stream to save the file
               const readStream = createReadStream(file.filepath);
@@ -34,9 +34,9 @@ export const upload = (_uploadLocation: string, _maxFileSize: number = 10 * 1024
               file.newFilename = `${uuidv4()}-${file.originalFilename}`;
               // Log the file path
               DEBUG.log(`File saved: ${file.filepath}`);
-              compressFiles("./build/public/files", "br");
-              compressFiles("./build/public/files", "deflate");
-              compressFiles("./build/public/files", "gzip");
+              compressFiles(uploadLocation, "br");
+              compressFiles(uploadLocation, "deflate");
+              compressFiles(uploadLocation, "gzip");
             }
           }
         } else {
