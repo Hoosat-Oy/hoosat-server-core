@@ -22,19 +22,20 @@ import { initReactI18next } from "react-i18next";
 
 
 i18n
-  .use(Backend)
-  .use(initReactI18next)
-  .init({
-    backend: {
-      // The translation files directory path on the server
-      loadPath: "./public/i18n/{{lng}}.json",
-    },
-    debug: true,
-    fallbackLng: "fi",
-    saveMissing: true,
-    interpolation: {
-      escapeValue: false,
-    },
-  });
+.use(Backend)
+.use(initReactI18next)
+.init({
+  backend: {
+    // The translation files directory path on the server
+    loadPath: "./public/i18n/{{lng}}.json",
+  },
+  debug: true,
+  fallbackLng: "fi",
+  saveMissing: true,
+  interpolation: {
+    escapeValue: false,
+  },
+})
+.catch(error => console.error('Error initializing i18next:', error));
 
 export default i18n;

@@ -4,6 +4,7 @@
  * This module provides a server-side rendering (SSR) function for rendering React JSX elements or ReactNodes
  * to a pipeable stream and sending the response to the client.
  */
+import fs from 'fs';
 import { renderToPipeableStream } from "react-dom/server";
 import { FilledContext } from "react-helmet-async";
 import { generatePreloadTags } from "./preload";
@@ -67,10 +68,12 @@ export const renderer = ({ res, jsx, helmetContext, extractCSS, preloadTagFolder
     css = extractCssFrom("./src/client");
   }
   let preloadTags = generatePreloadTags(preloadTagFolder!, "");
+  const bundleFiles = fs.readdirSync("build/public").filter(file => file.startsWith('bundle.') && file.endsWith('.js'));
+  const vendorFiles = fs.readdirSync("build/public").filter(file => file.startsWith('vendor.') && file.endsWith('.js'));
   const stream = renderToPipeableStream(
     jsx,
     {
-      bootstrapModules: ["/bundle.js"],
+      bootstrapModules: [...bundleFiles, ...vendorFiles],
       onShellReady: async () => {
         res.setHeader('content-type', 'text/html');
         if (helmetContext !== undefined) {
@@ -78,7 +81,7 @@ export const renderer = ({ res, jsx, helmetContext, extractCSS, preloadTagFolder
           if (headTags !== undefined) {
             newTags = headTags;
           }
-          newTags.link = newTags.link + preloadTags.join("\n") + '<link rel="stylesheet" href="combined-styles.css" crossorigin="use-credentials" />';
+          newTags.link = newTags.link + preloadTags.join("\n") + '<link rel="stylesheet" href="styles.css" crossorigin="use-credentials" />';
           if (extractCSS === true) {
             newTags.style = newTags.style + "<style>" + css + "</style>";
           }

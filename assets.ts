@@ -102,7 +102,7 @@ export const assets = (publicPath: string, enableCompression = false): HoosatReq
     for (const extension of compressedExtensions) {
       const compressedFilePath = filePath + extension;
       if (fs.existsSync(compressedFilePath)) {
-        let encoding;
+        let encoding = "";
         if (extension === ".br") {
           encoding = "br";
         } else if (extension === ".deflate") {
