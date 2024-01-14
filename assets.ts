@@ -98,13 +98,13 @@ export const assets = (publicPath: string, enableCompression = false): HoosatReq
       } else if (ext === '.pdf') {
         cacheControl = 'must-revalidate, public, max-age=31536000';
       } else if (ext === '.txt') {
-        cacheControl = 'must-revalidate, public, max-age=31536000';
+        cacheControl = 'must-revalidate, public, max-age=14400';
       } else if (ext === '.csv') {
-        cacheControl = 'must-revalidate, public, max-age=31536000';
+        cacheControl = 'must-revalidate, public, max-age=14400';
       } else if (ext === '.json') {
-        cacheControl = 'must-revalidate, public, max-age=31536000';
+        cacheControl = 'must-revalidate, public, max-age=14400';
       } else if (ext === '.xml') {
-        cacheControl = 'must-revalidate, public, max-age=31536000';
+        cacheControl = 'must-revalidate, public, max-age=14400';
       } else if (ext === '.js') {
         cacheControl = 'must-revalidate, max-age=14400';
       } else if (ext === '.css') {
