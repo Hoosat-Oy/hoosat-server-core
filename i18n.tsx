@@ -17,9 +17,16 @@
  */
 
 import i18n from "i18next";
+import fs from 'fs';
 import Backend from "i18next-fs-backend";
 import { initReactI18next } from "react-i18next";
 
+let path = ""
+if (fs.existsSync("./build/")) {
+  path = "./build/public/i18n/{{lng}}.json";
+} else if (fs.existsSync("./build-dev/")) {
+  path = "./build-dev/public/i18n/{{lng}}.json";
+}
 
 i18n
 .use(Backend)
@@ -27,7 +34,7 @@ i18n
 .init({
   backend: {
     // The translation files directory path on the server
-    loadPath: "./public/i18n/{{lng}}.json",
+    loadPath: path,
   },
   debug: true,
   fallbackLng: "fi",

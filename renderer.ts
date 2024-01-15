@@ -31,6 +31,7 @@ export interface HoosatRendererParams {
   jsx: ReactNode | JSX.Element,
   helmetContext?: object,
   extractCSS?: boolean,
+  publicDir: string,
   preloadTagFolder?: string,
   headTags?: HeadTags,
 }
@@ -62,15 +63,15 @@ export const helmetStream = async (headTags: HeadTags, helmetContext: object): P
  * @param {HoosatRenderer} params - The arguments for Hoosat server-side renderer.
  * @returns {void}
  */
-export const renderer = ({ res, jsx, helmetContext, extractCSS, preloadTagFolder, headTags }: HoosatRendererParams): void => {
+export const renderer = ({ res, jsx, helmetContext, extractCSS, publicDir, preloadTagFolder, headTags }: HoosatRendererParams): void => {
   let css = "";
   if(extractCSS === true) {
     css = extractCssFrom("./src/client");
   }
   let preloadTags = generatePreloadTags(preloadTagFolder!, "");
-  const bundleFiles = fs.readdirSync("build/public")
+  const bundleFiles = fs.readdirSync(publicDir)
     .filter(file => file.startsWith('bundle.') && file.endsWith('.js'));
-  const vendorFiles = fs.readdirSync("build/public")
+  const vendorFiles = fs.readdirSync(publicDir)
     .filter(file => file.startsWith('vendor.') && file.endsWith('.js'));
   const stream = renderToPipeableStream(
     jsx,
