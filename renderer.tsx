@@ -5,15 +5,17 @@
  * to a pipeable stream and sending the response to the client.
  */
 import fs from 'fs';
-import { renderToPipeableStream } from "react-dom/server";
-import { FilledContext } from "react-helmet-async";
-import { generatePreloadTags } from "./preload";
+import { renderToPipeableStream, renderToString  } from "react-dom/server";
+import { FilledContext, HelmetProvider } from "react-helmet-async";
 import { replaceHeadTags } from "./seo";
 import { HeadTags, HoosatResponse } from "./types";
 import { ErrorHandler } from "./errors";
-import { ReactNode, JSX } from "react";
+import { ReactElement, JSXElementConstructor } from "react";
 import internal from "stream";
-import { extractCssFrom } from "./cssextractor";
+import React from 'react';
+import { readNonceFromFile } from './nonce';
+import { generateSitemap } from './sitemap';
+
 
 /**
  * Represents the arguments for the Hoosat server-side renderer.
@@ -28,11 +30,8 @@ import { extractCssFrom } from "./cssextractor";
  */
 export interface HoosatRendererParams {
   res: HoosatResponse,
-  jsx: ReactNode | JSX.Element,
-  helmetContext?: object,
-  extractCSS?: boolean,
+  jsx: ReactElement<any, string | JSXElementConstructor<any>>,
   publicDir: string,
-  preloadTagFolder?: string,
   headTags?: HeadTags,
 }
 
@@ -56,6 +55,47 @@ export const helmetStream = async (headTags: HeadTags, helmetContext: object): P
   return replaceStream;
 }
 
+
+const as: { [key: string]: string } = {
+  'ico': 'image',
+  'jpg': 'image',
+  'jpeg': 'image',
+  'png': 'image',
+  'gif': 'image',
+  'avif': 'image',
+  'svg': 'image',
+  'otf': 'font',
+  'ttf': 'font',
+  'pdf': 'document',
+  'txt': 'document',
+  'csv': 'document',
+  'json': 'fetch',
+  'xml': 'document',
+  'html': 'document',
+  'xhtml': 'document',
+  'js': 'script',
+  'css': 'sstyle',
+  'mp4': 'audio',
+  'mp3': 'audo',
+  'wav': 'audio',
+  'doc': 'document',
+  'xls': 'document',
+  'pptx': 'document',
+  'docx': 'document',
+  'ppt': 'document',
+  'zip': 'fetch', 
+  'rar': 'fetch',
+  'webm': 'video',
+  'mkv': 'video',
+  'avi': 'video',
+  '': "document",
+};
+
+
+const getFileType = (fileName: string): string => {
+  return fileName.split('.').pop()?.toLowerCase() || '';
+};
+
 /**
  * Renders a React JSX element or ReactNode to a pipeable stream and sends the response to the client.
  * This function is designed for server-side rendering (SSR) in a Hoosat application.
@@ -63,18 +103,42 @@ export const helmetStream = async (headTags: HeadTags, helmetContext: object): P
  * @param {HoosatRenderer} params - The arguments for Hoosat server-side renderer.
  * @returns {void}
  */
-export const renderer = ({ res, jsx, helmetContext, extractCSS, publicDir, preloadTagFolder, headTags }: HoosatRendererParams): void => {
-  let css = "";
-  if(extractCSS === true) {
-    css = extractCssFrom("./src/client");
-  }
-  let preloadTags = generatePreloadTags(preloadTagFolder!, "");
+export const renderer = async ({ res, jsx, publicDir, headTags }: HoosatRendererParams): Promise<void> => {
+  const preloadContext: string[] = [];
+  const helmetContext = {};
   const bundleFiles = fs.readdirSync(publicDir)
     .filter(file => file.startsWith('bundle.') && file.endsWith('.js'));
   const vendorFiles = fs.readdirSync(publicDir)
     .filter(file => file.startsWith('vendor.') && file.endsWith('.js'));
+
+  const root = <React.StrictMode>
+                  <HelmetProvider context={helmetContext}>
+                      {jsx}
+                  </HelmetProvider>
+              </React.StrictMode>;
+  const stringRender = renderToString(root);
+  const prefetchRegex = /(?:src|href)\s*=\s*['"](?!(http:\/\/|https:\/\/|#))([^'"\s@]*\.[^'"\s@]*)['"]/g;
+  let match;
+  const prefetchUrlsFromRender = [];
+  while ((match = prefetchRegex.exec(stringRender)) !== null) {
+    if (!match[2].includes("manifest.json")) {
+      prefetchUrlsFromRender.push(match[2]);
+    }
+  }
+  const sitemapUrlRegex = /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/g;
+  const sitemapUrlsFromRender = [];
+  while ((match = sitemapUrlRegex.exec(stringRender)) !== null) {
+    sitemapUrlsFromRender.push(match[2]);
+  }
+  generateSitemap(publicDir, sitemapUrlsFromRender);
+  const nonce = readNonceFromFile();
+  console.log(nonce);
+  const preloadsFromRender = prefetchUrlsFromRender.map((url) => (`<link rel="prefetch" href="${url}" as="${as[getFileType(url)]}" nonce="${nonce}" crossorigin />`));
+  const preloadsFromBundleFiles = bundleFiles.map((preload) => (`<link rel="preload" href="${preload}" as="${as[getFileType(preload)]}" nonce="${nonce}" crossorigin />`)) || [""];
+  const preloadsFromVendorFiles = vendorFiles.map((preload) => (`<link rel="preload" href="${preload}" as="${as[getFileType(preload)]}" nonce="${nonce}" crossorigin />`)) || [""];
+  const preloads = [...preloadsFromBundleFiles, ...preloadsFromVendorFiles, ...preloadsFromRender ];
   const stream = renderToPipeableStream(
-    jsx,
+    root,
     {
       bootstrapModules: [...bundleFiles, ...vendorFiles],
       onShellReady: async () => {
@@ -84,10 +148,7 @@ export const renderer = ({ res, jsx, helmetContext, extractCSS, publicDir, prelo
           if (headTags !== undefined) {
             newTags = headTags;
           }
-          newTags.link = newTags.link + preloadTags.join("\n") + '<link rel="stylesheet" href="styles.css" crossorigin="use-credentials" />';
-          if (extractCSS === true) {
-            newTags.style = newTags.style + "<style>" + css + "</style>";
-          }
+          newTags.link = newTags.link + preloads.join("\n") + `<link rel="preload" href="public/styles.css" as="style" nonce="${nonce}" crossorigin /><link rel="stylesheet" href="public/styles.css" crossorigin />\n`;
           const replaceStream = await helmetStream(newTags, helmetContext);
           stream.pipe(replaceStream).pipe(res);
         } else {
