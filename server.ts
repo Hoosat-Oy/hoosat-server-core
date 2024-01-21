@@ -5,6 +5,7 @@ import http, { IncomingMessage, ServerResponse } from "http";
 import https from "https";
 import { DEBUG } from './errors';
 import { HoosatRequest, HoosatResponse, HoosatRequestHandler, HoosatRoute, HoosatRouter, HoosatServer, HoosatServerOptions, HoosatParams } from './types';
+import { readNonceFromFile, writeNonceToFile } from './nonce';
 
 /**
  * Creates a new router instance.
@@ -155,12 +156,12 @@ export const createRouter = (): HoosatRouter => {
  * @returns {HoosatResponse}
  */
 const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatRequest> => {
-    const form = formidable({});
-    const [fields, files] = await form.parse(message);
-    const request: HoosatRequest = message as HoosatRequest;
-    request.body = { ...fields};
-    request.files = files;
-    return request;
+  const form = formidable({});
+  const [fields, files] = await form.parse(message);
+  const request: HoosatRequest = message as HoosatRequest;
+  request.body = { ...fields};
+  request.files = files;
+  return request;
 };
 
 
@@ -202,7 +203,6 @@ const createServerResponse = (response: ServerResponse): HoosatResponse => {
   return serverResponse;
 };
 
-
 /**
  * Handles incoming requests by executing middlewares and routing to the appropriate handler.
  * @param {HoosatRouter} router - The router instance used for routing.
@@ -213,14 +213,15 @@ const createServerResponse = (response: ServerResponse): HoosatResponse => {
 export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, res: ServerResponse): Promise<void> => {
   const request = await parseIncomingMessage(req);
   const response = createServerResponse(res);
-  res.setHeader(
-    'Content-Security-Policy',
-    "script-src 'self';" +
-    "style-src 'self' 'unsafe-inline';" +
-    "object-src 'self';" +
-    "base-uri 'self';" +
-    "report-uri https://reporting.hoosat.fi"
-);
+  const nonce = readNonceFromFile();
+  const cspHeader = "script-src 'self' 'nonce-" + nonce + "' http: https:; " +
+                    "style-src 'self' 'unsafe-inline';"
+                    "object-src 'none';" +
+                    "base-uri 'none'; " + 
+                    "require-trusted-types-for 'script'; " +
+                    "report-uri https://reporting.hoosat.fi;";
+  res.setHeader("Content-Security-Policy", cspHeader);
+
   const { routes } = router;
   const { url: path = '', method = '' } = req;
 
