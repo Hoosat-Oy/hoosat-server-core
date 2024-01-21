@@ -4,11 +4,11 @@ import { DEBUG } from "./errors";
 /**
  * Creates a CORS middleware that sets the appropriate headers for Cross-Origin Resource Sharing (CORS).
  *
- * @param {string} origin - The allowed origin for CORS requests.
+ * @param {string} origins - The allowed origins for CORS requests.
  * @param {string} methods - The allowed HTTP methods for CORS requests.
  * @returns {HoosatRequestHandler} The CORS middleware.
  */
-export const cors = (origin: string, methods: string): HoosatRequestHandler => {
+export const cors = (origins: string, methods: string): HoosatRequestHandler => {
   /**
    * Handles the CORS middleware.
    *
@@ -21,22 +21,31 @@ export const cors = (origin: string, methods: string): HoosatRequestHandler => {
   return (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler) => {
     if (!req) {
       DEBUG.log("Error: 'req' parameter is missing.");
-      return; // Stop further execution if 'req' is missing
+      return; 
     }
     if (!res) {
       DEBUG.log("Error: 'res' parameter is missing.");
-      return; // Stop further execution if 'res' is missing
+      return; 
     }
-    if (origin === undefined) {
+    if (origins === undefined) {
       DEBUG.log("Warning: 'origin' parameter is empty.");
+      return;
     }
     if (methods === undefined) {
       DEBUG.log("Warning: 'methods' parameter is empty.");
+      return;
     }
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', methods);
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-With');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    if(req.headers.origin === undefined) {
+      res.setHeader('Access-Control-Allow-Origin', origins[0]);
+      res.setHeader('Access-Control-Allow-Methods', methods);
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Content-Security-Policy');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    } else if(origins.includes(req.headers.origin.replace("http://", "").replace("https://", ""))) {
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+      res.setHeader('Access-Control-Allow-Methods', methods);
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Content-Security-Policy');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
     next && next(req, res);
   };
 };
