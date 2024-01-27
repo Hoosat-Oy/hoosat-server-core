@@ -133,7 +133,7 @@ export const renderer = async ({ res, jsx, publicDir, headTags }: HoosatRenderer
   generateSitemap(publicDir, sitemapUrlsFromRender);
   const nonce = readNonceFromFile();
   console.log(nonce);
-  const preloadsFromRender = prefetchUrlsFromRender.map((url) => (`<link rel="prefetch" href="${url}" as="${as[getFileType(url)]}" nonce="${nonce}" crossorigin />`));
+  const preloadsFromRender = prefetchUrlsFromRender.map((url) => (`<link rel="prefetch" href="${url}" nonce="${nonce}" crossorigin />`));
   const preloadsFromBundleFiles = bundleFiles.map((preload) => (`<link rel="preload" href="/${preload}" as="${as[getFileType(preload)]}" nonce="${nonce}" crossorigin />`)) || [""];
   const preloadsFromVendorFiles = vendorFiles.map((preload) => (`<link rel="preload" href="/${preload}" as="${as[getFileType(preload)]}" nonce="${nonce}" crossorigin />`)) || [""];
   const preloads = [...preloadsFromBundleFiles, ...preloadsFromVendorFiles, ...preloadsFromRender ];
