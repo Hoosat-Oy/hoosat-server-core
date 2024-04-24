@@ -104,7 +104,6 @@ const getFileType = (fileName: string): string => {
  * @returns {void}
  */
 export const renderer = async ({ res, jsx, publicDir, headTags }: HoosatRendererParams): Promise<void> => {
-  const preloadContext: string[] = [];
   const helmetContext = {};
   const bundleFiles = fs.readdirSync(publicDir)
     .filter(file => file.startsWith('bundle.') && file.endsWith('.js'));
