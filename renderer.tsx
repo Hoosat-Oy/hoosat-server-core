@@ -6,7 +6,7 @@
  */
 import fs from 'fs';
 import { renderToPipeableStream, renderToString  } from "react-dom/server";
-import { HelmetData, HelmetProvider } from "react-helmet-async";
+import { FilledContext, HelmetProvider } from "react-helmet-async";
 import { replaceHeadTags } from "./seo";
 import { HeadTags, HoosatResponse } from "./types";
 import { ErrorHandler } from "./errors";
@@ -43,7 +43,17 @@ export interface HoosatRendererParams {
  * @returns {Promise<internal.Transform>} The transform stream to replace head tags.
  */
 export const helmetStream = async (headTags: HeadTags, helmetContext: object): Promise<internal.Transform> => {
-  const { helmet } = (helmetContext as HelmetData).context;
+  if (helmetContext === undefined) {
+    return replaceHeadTags({
+      title: headTags.title,
+      meta: headTags.meta,
+      link: headTags.link,
+      script: headTags.script,
+      base: headTags.base,
+      style: headTags.style,
+    });
+  }
+  const { helmet } = helmetContext as FilledContext;
   const replaceStream = replaceHeadTags({
     title: headTags.title + helmet?.title?.toString(),
     meta: headTags.meta + helmet?.meta?.toString(),
