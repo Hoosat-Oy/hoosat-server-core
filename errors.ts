@@ -16,6 +16,9 @@ export let DEBUG = {
       console.log(...args);
     }
   },
+  error: (...args: any[]): void => {
+    console.log(...args);
+  },
 };
 
 /**

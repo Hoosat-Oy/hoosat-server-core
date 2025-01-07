@@ -28,15 +28,22 @@ export const assets = (publicPath: string): HoosatRequestHandler => {
       console.error('Malformed URI:', error);
       return;
     }
-    let acceptEncoding = req.headers['accept-encoding'] as string;
 
-    const filePath = path.join(publicPath, decodedURL);
-    // Check if filePath is a file
-    if (!fs.existsSync(filePath) || !fs.lstatSync(filePath).isFile()) {
+    // Resolve the file path and prevent path traversal
+    const resolvedPath = path.resolve(publicPath, '.' + decodedURL);
+    if (!resolvedPath.startsWith(publicPath)) {
+      console.error('Path traversal attempt detected:', resolvedPath);
+      res.statusCode = 403; // Forbidden
+      res.end('Forbidden');
+      return;
+    }
+
+    // Check if the resolved path is a file
+    if (!fs.existsSync(resolvedPath) || !fs.lstatSync(resolvedPath).isFile()) {
       return next && next(req, res);
     }
 
-    const ext = path.extname(filePath).toLowerCase();
+    const ext = path.extname(resolvedPath).toLowerCase();
 
     const contentTypeMap: { [key: string]: string } = {
       '.jpg': 'image/jpeg',
@@ -85,18 +92,19 @@ export const assets = (publicPath: string): HoosatRequestHandler => {
       '.wav': 'public, max-age=31536000',
       '.ico': 'public, max-age=31536000',
     };
-    
+
     const contentType = contentTypeMap[ext] || 'application/octet-stream';
     const cacheControl = cacheControlMap[ext] || 'no-cache';
 
-    if (acceptEncoding !== undefined) {
+    const acceptEncoding = req.headers['accept-encoding'] as string | undefined;
+    if (acceptEncoding) {
       const compressedExtensions = ['.br', '.deflate', '.gzip'];
       for (const encoding of compressedExtensions) {
-        if (acceptEncoding.includes(encoding.replace(".", ""))) {
-          const compressedFilePath = filePath + encoding;
+        if (acceptEncoding.includes(encoding.replace('.', ''))) {
+          const compressedFilePath = resolvedPath + encoding;
           if (fs.existsSync(compressedFilePath)) {
             const compressedFileStream = fs.createReadStream(compressedFilePath);
-            res.setHeader('Content-Encoding', encoding.replace(".", ""));
+            res.setHeader('Content-Encoding', encoding.replace('.', ''));
             res.setHeader('Content-Type', contentType);
             res.setHeader('Cache-Control', cacheControl);
             compressedFileStream.pipe(res);
@@ -106,10 +114,10 @@ export const assets = (publicPath: string): HoosatRequestHandler => {
       }
     }
 
-    // If no compressed file found, serve the uncompressed file
+    // Serve the uncompressed file if no compressed file is available
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', cacheControl);
-    const fileStream = fs.createReadStream(filePath);
+    const fileStream = fs.createReadStream(resolvedPath);
     fileStream.pipe(res);
   };
 };

@@ -23,6 +23,15 @@ interface FileInfo {
 export function generatePreloadTags(folderPath: string, publicHrefPath: string): string[] {
   const files: FileInfo[] = [];
 
+
+  function sanitizePath(filePath: string): string {
+    const normalizedPath = path.normalize(filePath);
+    // Ensure the path doesn't contain any '..' that could lead outside of the allowed folder
+    if (normalizedPath.includes('..') || !normalizedPath.startsWith(folderPath)) {
+      throw new Error(`Invalid path detected: ${filePath}. Path traversal is not allowed.`);
+    }
+    return normalizedPath;
+  }
   /**
    * Recursive function to read files from a directory.
    *
@@ -30,19 +39,26 @@ export function generatePreloadTags(folderPath: string, publicHrefPath: string):
    * @returns {void}
    */
   function readFilesRecursive(directory: string): void {
-    if(directory === undefined) {
+    if (directory === undefined) {
       return;
     }
-    const fileNames = fs.readdirSync(directory);
+  
+    // Sanitize the directory path to ensure it doesn't go outside the root folder
+    const sanitizedDirectory = sanitizePath(directory);
+  
+    const fileNames = fs.readdirSync(sanitizedDirectory);
     fileNames.forEach((fileName) => {
-      const filePath = path.join(directory, fileName);
+      const filePath = path.join(sanitizedDirectory, fileName);
       const stat = fs.statSync(filePath);
-
+  
+      // Sanitize each file's path
+      const sanitizedFilePath = sanitizePath(filePath);
+  
       if (stat.isDirectory()) {
-        readFilesRecursive(filePath);
+        readFilesRecursive(sanitizedFilePath); // Recursively read subdirectories
       } else {
-        const mimeType = getMimeType(filePath);
-        const relativePath = path.relative(folderPath, filePath);
+        const mimeType = getMimeType(sanitizedFilePath); // Assume getMimeType is defined elsewhere
+        const relativePath = path.relative(folderPath, sanitizedFilePath);
         files.push({ filePath: relativePath, mimeType });
       }
     });
