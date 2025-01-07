@@ -6,6 +6,7 @@ import https from "https";
 import { DEBUG } from './errors';
 import { HoosatRequest, HoosatResponse, HoosatRequestHandler, HoosatRoute, HoosatRouter, HoosatServer, HoosatServerOptions, HoosatParams } from './types';
 import { readNonceFromFile, writeNonceToFile } from './nonce';
+import path from 'path';
 
 /**
  * Creates a new router instance.
@@ -148,6 +149,34 @@ export const createRouter = (): HoosatRouter => {
   return { routes, Route, UseRouter, Get, Put, Post, Delete, Middleware };
 };
 
+
+/**
+ * Sanitizes the URL path to prevent path traversal and ensure safe file paths.
+ * @param urlPath - The raw URL path to sanitize.
+ * @returns A sanitized URL path.
+ */
+export function sanitizeUrlPath(urlPath: string): string {
+  // Normalize the path to resolve any relative paths like ../ or ./ 
+  let sanitizedPath = path.normalize(urlPath);
+
+  // Strip any unwanted characters (e.g., URL encoding for special characters like %, &, etc.)
+  sanitizedPath = sanitizedPath.replace(/[^a-zA-Z0-9-_\/\.]/g, '');
+  
+  // Ensure the path doesn't traverse outside of a safe directory (e.g., root directory)
+  if (sanitizedPath.includes('..')) {
+    throw new Error('Invalid path: contains traversal sequences');
+  }
+
+  // Remove leading slashes, if necessary, to avoid unintended file access
+  //sanitizedPath = sanitizedPath.replace(/^\/+/, '');
+
+  // Optionally, ensure the sanitized path doesn't start with any dangerous sequences
+  // e.g., we don't want paths like '/..' to resolve to system files.
+  sanitizedPath = path.join('', sanitizedPath);
+
+  return sanitizedPath;
+}
+
 /**
  * Parses an IncomingMessage object and creates a HoosatRequest object.
  * 
@@ -157,6 +186,7 @@ export const createRouter = (): HoosatRouter => {
  */
 const parseIncomingMessage = async (message: IncomingMessage): Promise<HoosatRequest> => {
   const form = formidable({});
+  message.url = sanitizeUrlPath(message.url!)
   const [fields, files] = await form.parse(message);
   const request: HoosatRequest = message as HoosatRequest;
   request.body = { ...fields};
@@ -211,86 +241,90 @@ const createServerResponse = (response: ServerResponse): HoosatResponse => {
  * @returns {void}
  */
 export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, res: ServerResponse): Promise<void> => {
-  const request = await parseIncomingMessage(req);
   const response = createServerResponse(res);
-  const nonce = readNonceFromFile();
-  const cspHeader = "script-src 'self' 'nonce-" + nonce + "' http: https:; " +
-                    "style-src 'self' 'unsafe-inline';"
-                    "object-src 'none';" +
-                    "base-uri 'none'; " + 
-                    "require-trusted-types-for 'script'; " +
-                    "report-uri https://reporting.hoosat.fi;";
-  res.setHeader("Content-Security-Policy", cspHeader);
-
-  const { routes } = router;
-  const { url: path = '', method = '' } = req;
-
-  const middlewares: HoosatRequestHandler[] = [];
-  for (const route of routes) {
-    if (route.path === 'hoosat-middleware') {
-      middlewares.push(route.handler);
+  try {
+    const request = await parseIncomingMessage(req);
+    const nonce = readNonceFromFile();
+    const cspHeader = "script-src 'self' 'nonce-" + nonce + "' http: https:; " +
+                      "style-src 'self' 'unsafe-inline';"
+                      "object-src 'none';" +
+                      "base-uri 'none'; " + 
+                      "require-trusted-types-for 'script'; " +
+                      "report-uri https://reporting.hoosat.fi;";
+    res.setHeader("Content-Security-Policy", cspHeader);
+  
+    const { routes } = router;
+    const { url: path = '', method = '' } = request;
+  
+    const middlewares: HoosatRequestHandler[] = [];
+    for (const route of routes) {
+      if (route.path === 'hoosat-middleware') {
+        middlewares.push(route.handler);
+      }
     }
-  }
-
-  let currentMiddleware = 0;
-  const executeNext = (currentReq: HoosatRequest, currentRes: HoosatResponse): void => {
-    if (currentMiddleware < middlewares.length) {
-      const middleware = middlewares[currentMiddleware];
-      currentMiddleware++;
-      middleware(currentReq, currentRes, () => {
-        executeNext(currentReq, currentRes);
-      });
-    } else {
-      let foundRoute: HoosatRoute | undefined;
-      for (const route of routes) {
-        const { path: routePath, method: routeMethod } = route;
-        const pathSegments = path.split('/').filter(segment => segment !== '').map(decodeURIComponent);
-        const routeSegments = routePath.split('/').filter(segment => segment !== '');
-        if (pathSegments.length === routeSegments.length && routeMethod === method) {
-          let match = true;
-          const params: HoosatParams = {};
-          for (let i = 0; i < routeSegments.length; i++) {
-            const routeSegment = routeSegments[i];
-            if (routeSegment.startsWith(':')) {
-              const paramName = routeSegment.slice(1);
-              const paramValue = pathSegments[i];
-              params[paramName] = paramValue;
-            } else if (pathSegments[i] !== routeSegment) {
-              match = false;
+  
+    let currentMiddleware = 0;
+    const executeNext = (currentReq: HoosatRequest, currentRes: HoosatResponse): void => {
+      if (currentMiddleware < middlewares.length) {
+        const middleware = middlewares[currentMiddleware];
+        currentMiddleware++;
+        middleware(currentReq, currentRes, () => {
+          executeNext(currentReq, currentRes);
+        });
+      } else {
+        let foundRoute: HoosatRoute | undefined;
+        for (const route of routes) {
+          const { path: routePath, method: routeMethod } = route;
+          const pathSegments = path.split('/').filter(segment => segment !== '').map(decodeURIComponent);
+          const routeSegments = routePath.split('/').filter(segment => segment !== '');
+          if (pathSegments.length === routeSegments.length && routeMethod === method) {
+            let match = true;
+            const params: HoosatParams = {};
+            for (let i = 0; i < routeSegments.length; i++) {
+              const routeSegment = routeSegments[i];
+              if (routeSegment.startsWith(':')) {
+                const paramName = routeSegment.slice(1);
+                const paramValue = pathSegments[i];
+                params[paramName] = paramValue;
+              } else if (pathSegments[i] !== routeSegment) {
+                match = false;
+                break;
+              }
+            }
+            if (match) {
+              currentReq.params = params;
+              foundRoute = route;
               break;
             }
           }
-          if (match) {
-            currentReq.params = params;
-            foundRoute = route;
-            break;
-          }
         }
-      }
-      if (foundRoute) {
-        DEBUG.log("executing route:", foundRoute.path);
-        foundRoute.handler(currentReq, currentRes, executeNext);
-      } else {
-        foundRoute = routes.find(route => {
-          if (route.path === "*") {
-            return true;
-          } else if (route.path.endsWith("/*") && path.startsWith(route.path.slice(0, -1))) {
-            return true;
-          } else {
-            return false;
-          }
-        })
         if (foundRoute) {
           DEBUG.log("executing route:", foundRoute.path);
           foundRoute.handler(currentReq, currentRes, executeNext);
         } else {
-          response.status(404).send("Not Found");
+          foundRoute = routes.find(route => {
+            if (route.path === "*") {
+              return true;
+            } else if (route.path.endsWith("/*") && path.startsWith(route.path.slice(0, -1))) {
+              return true;
+            } else {
+              return false;
+            }
+          })
+          if (foundRoute) {
+            DEBUG.log("executing route:", foundRoute.path);
+            foundRoute.handler(currentReq, currentRes, executeNext);
+          } else {
+            response.status(404).send("Not Found");
+          }
         }
       }
-    }
-  };
-
-  executeNext(request, response);
+    };
+  
+    executeNext(request, response);
+  } catch {
+    response.status(500).send("Request could not be processed.")
+  }
 };
 
 /**

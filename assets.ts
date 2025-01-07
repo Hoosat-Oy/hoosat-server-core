@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { HoosatRequest, HoosatRequestHandler, HoosatResponse } from './types';
+import { sanitizeUrlPath } from './server';
 
 /**
  * Creates a middleware for serving static assets from a specified public directory.
@@ -20,7 +21,7 @@ export const assets = (publicPath: string): HoosatRequestHandler => {
   return (req: HoosatRequest, res: HoosatResponse, next?: HoosatRequestHandler): void => {
     let decodedURL: string;
     try {
-      decodedURL = decodeURIComponent(req.url || '');
+      decodedURL = decodeURIComponent(sanitizeUrlPath(req.url!) || '');
       if (decodedURL.startsWith('/public')) {
         decodedURL = decodedURL.slice('/public'.length);
       }
