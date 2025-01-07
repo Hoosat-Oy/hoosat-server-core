@@ -6,7 +6,6 @@ import https from "https";
 import { DEBUG } from './errors';
 import { HoosatRequest, HoosatResponse, HoosatRequestHandler, HoosatRoute, HoosatRouter, HoosatServer, HoosatServerOptions, HoosatParams } from './types';
 import { readNonceFromFile, writeNonceToFile } from './nonce';
-import path from 'path';
 
 /**
  * Creates a new router instance.
@@ -28,7 +27,6 @@ export const createRouter = (): HoosatRouter => {
    * @property {Function} Middleware - The function used to define a middleware.
    */
   const routes: HoosatRoute[] = [];
-  
   /**
    * Defines a new route with the specified method, path, and handler.
    * @param {string} method - The HTTP method for the route.
@@ -205,15 +203,6 @@ const createServerResponse = (response: ServerResponse): HoosatResponse => {
   return serverResponse;
 };
 
-function sanitizePath(filePath: string): string {
-  const normalizedPath = path.normalize(filePath);
-  // Ensure the path doesn't contain any '..' that could lead outside of the allowed folder
-  if (normalizedPath.includes('..') ) {
-    throw new Error(`Invalid path detected: ${filePath}. Path traversal is not allowed.`);
-  }
-  return normalizedPath;
-}
-
 /**
  * Handles incoming requests by executing middlewares and routing to the appropriate handler.
  * @param {HoosatRouter} router - The router instance used for routing.
@@ -255,8 +244,7 @@ export const handleRequest = async (router: HoosatRouter, req: IncomingMessage, 
       let foundRoute: HoosatRoute | undefined;
       for (const route of routes) {
         const { path: routePath, method: routeMethod } = route;
-        const sanitizedPath = sanitizePath(path)
-        const pathSegments = sanitizedPath.split('/').filter(segment => segment !== '').map(decodeURIComponent);
+        const pathSegments = path.split('/').filter(segment => segment !== '').map(decodeURIComponent);
         const routeSegments = routePath.split('/').filter(segment => segment !== '');
         if (pathSegments.length === routeSegments.length && routeMethod === method) {
           let match = true;
